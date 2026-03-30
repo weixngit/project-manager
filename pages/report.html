@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>盈亏报表 - 工程项目管理</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <a href="../index.html" class="back-btn">←</a>
+            <h2 class="page-title">盈亏报表</h2>
+        </div>
+
+        <!-- 汇总统计 -->
+        <div style="padding: 16px; background: linear-gradient(135deg, #1890ff, #40a9ff); color: #fff;">
+            <div style="text-align: center;">
+                <div style="font-size: 14px; opacity: 0.9;">总利润</div>
+                <div class="amount" style="font-size: 36px; font-weight: 700;" id="total-profit">¥0</div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 12px; opacity: 0.9;">合同总额</div>
+                    <div style="font-size: 18px; font-weight: 600;" id="total-contract">¥0</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 12px; opacity: 0.9;">总成本</div>
+                    <div style="font-size: 18px; font-weight: 600;" id="total-cost">¥0</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 12px; opacity: 0.9;">项目数</div>
+                    <div style="font-size: 18px; font-weight: 600;" id="total-projects">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 项目列表 -->
+        <div class="main-content">
+            <h3 style="font-size: 16px; margin-bottom: 12px;">各项目盈亏</h3>
+            <div id="report-list"></div>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/cloudStorage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        function loadReport() {
+            const projects = ProjectStore.getAll();
+            let totalContract = 0;
+            let totalCost = 0;
+            let totalProfit = 0;
+
+            projects.forEach(p => {
+                const profit = Utils.calculateProfit(p.id);
+                if (profit) {
+                    totalContract += profit.contractAmount;
+                    totalCost += profit.totalCost;
+                    totalProfit += profit.profit;
+                }
+            });
+
+            document.getElementById('total-contract').textContent = Utils.formatMoney(totalContract);
+            document.getElementById('total-cost').textContent = Utils.formatMoney(totalCost);
+            document.getElementById('total-profit').textContent = Utils.formatMoney(totalProfit);
+            document.getElementById('total-projects').textContent = projects.length;
+
+            const container = document.getElementById('report-list');
+
+            if (projects.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无项目数据</div>';
+                return;
+            }
+
+            container.innerHTML = projects.map(p => {
+                const profit = Utils.calculateProfit(p.id);
+                const profitValue = profit ? profit.profit : 0;
+                const profitRate = profit ? profit.profitRate : 0;
+                const profitClass = profitValue >= 0 ? 'profit-positive' : 'profit-negative';
+                const totalPaid = PaymentStore.getTotalPaid(p.id);
+
+                return `
+                    <a href="project-detail.html?id=${p.id}" class="card" style="text-decoration: none; color: inherit;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 15px; font-weight: 600;">${p.name}</div>
+                                <div style="font-size: 12px; color: #999; margin-top: 4px;">
+                                    合同: ${Utils.formatMoney(p.contractAmount)} | 回款: ${Utils.formatMoney(totalPaid)}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="amount ${profitClass}" style="font-size: 18px;">
+                                    ${Utils.formatMoney(profitValue)}
+                                </div>
+                                <div style="font-size: 12px; color: #999;">
+                                    利润率: ${profitRate}%
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${p.progress || 0}%;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #999; margin-top: 4px;">
+                                <span>进度: ${p.progress || 0}%</span>
+                                <span class="tag ${Utils.getStatusTag(p.status)}">${p.status}</span>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        loadReport();
+    </script>
+</body>
+</html>

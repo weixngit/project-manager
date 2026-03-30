@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>新建项目 - 工程项目管理</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <a href="project-list.html" class="back-btn">←</a>
+            <h2 class="page-title" id="page-title">新建项目</h2>
+        </div>
+
+        <!-- 表单 -->
+        <div class="main-content">
+            <form id="project-form" class="card">
+                <div class="form-group">
+                    <label class="form-label">项目名称 *</label>
+                    <input type="text" class="form-input" id="name" placeholder="例：XX小区改造项目" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">合同金额（元）*</label>
+                    <input type="number" class="form-input" id="contractAmount" placeholder="输入合同总金额" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">甲方/客户</label>
+                    <input type="text" class="form-input" id="client" placeholder="甲方名称">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">负责人</label>
+                    <input type="text" class="form-input" id="manager" placeholder="项目负责人">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">开工日期</label>
+                    <input type="date" class="form-input" id="startDate">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">预计完工日期</label>
+                    <input type="date" class="form-input" id="endDate">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">项目状态</label>
+                    <select class="form-select" id="status">
+                        <option value="进行中">进行中</option>
+                        <option value="已完成">已完成</option>
+                        <option value="已暂停">已暂停</option>
+                        <option value="已取消">已取消</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">进度（%）</label>
+                    <input type="range" id="progress" min="0" max="100" value="0" style="width: 100%;">
+                    <div style="text-align: center; color: #666; font-size: 14px;" id="progress-value">0%</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">预计税费（元）</label>
+                    <input type="number" class="form-input" id="taxAmount" placeholder="预计应交税费">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <textarea class="form-input" id="remark" placeholder="其他备注信息" rows="3" style="resize: none;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="button" class="btn btn-block" style="background: #f5f5f5; color: #666;" onclick="history.back()">取消</button>
+                    <button type="submit" class="btn btn-primary btn-block">保存</button>
+                </div>
+
+                <!-- 删除按钮（仅编辑模式显示） -->
+                <button type="button" id="delete-btn" class="btn btn-danger btn-block" style="margin-top: 12px; display: none;">删除项目</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/cloudStorage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        const params = Utils.getUrlParams();
+        const projectId = params.id;
+        let isEdit = false;
+
+        // 进度滑块
+        document.getElementById('progress').addEventListener('input', function() {
+            document.getElementById('progress-value').textContent = this.value + '%';
+        });
+
+        // 编辑模式：加载现有数据
+        if (projectId) {
+            isEdit = true;
+            document.getElementById('page-title').textContent = '编辑项目';
+            
+            const project = ProjectStore.getById(projectId);
+            if (project) {
+                document.getElementById('name').value = project.name || '';
+                document.getElementById('contractAmount').value = project.contractAmount || '';
+                document.getElementById('client').value = project.client || '';
+                document.getElementById('manager').value = project.manager || '';
+                document.getElementById('startDate').value = project.startDate || '';
+                document.getElementById('endDate').value = project.endDate || '';
+                document.getElementById('status').value = project.status || '进行中';
+                document.getElementById('progress').value = project.progress || 0;
+                document.getElementById('progress-value').textContent = (project.progress || 0) + '%';
+                document.getElementById('taxAmount').value = project.taxAmount || '';
+                document.getElementById('remark').value = project.remark || '';
+                
+                document.getElementById('delete-btn').style.display = 'block';
+            }
+        }
+
+        // 提交表单
+        document.getElementById('project-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('name').value.trim(),
+                contractAmount: document.getElementById('contractAmount').value,
+                client: document.getElementById('client').value.trim(),
+                manager: document.getElementById('manager').value.trim(),
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                status: document.getElementById('status').value,
+                progress: parseInt(document.getElementById('progress').value),
+                taxAmount: document.getElementById('taxAmount').value,
+                remark: document.getElementById('remark').value.trim()
+            };
+
+            if (!data.name) {
+                Utils.showToast('请输入项目名称');
+                return;
+            }
+
+            if (!data.contractAmount) {
+                Utils.showToast('请输入合同金额');
+                return;
+            }
+
+            if (isEdit) {
+                ProjectStore.update(projectId, data);
+                Utils.showToast('保存成功');
+            } else {
+                ProjectStore.add(data);
+                Utils.showToast('创建成功');
+            }
+
+            setTimeout(() => {
+                location.href = 'project-list.html';
+            }, 500);
+        });
+
+        // 删除项目
+        document.getElementById('delete-btn').addEventListener('click', async function() {
+            const confirmed = await Utils.confirm('确定要删除这个项目吗？相关的成本、回款、票据记录也会被删除。');
+            if (confirmed) {
+                ProjectStore.delete(projectId);
+                Utils.showToast('已删除');
+                setTimeout(() => {
+                    location.href = 'project-list.html';
+                }, 500);
+            }
+        });
+    </script>
+</body>
+</html>

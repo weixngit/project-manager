@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>工程项目管理</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部标题栏 -->
+        <header class="header">
+            <h1>工程项目管理</h1>
+            <span class="subtitle">小布丁为您服务 🍮</span>
+        </header>
+
+        <!-- 主要内容区 -->
+        <main class="main-content">
+            <!-- 快捷统计卡片 -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-projects">0</div>
+                    <div class="stat-label">进行中项目</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-profit">¥0</div>
+                    <div class="stat-label">总利润</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value" id="payment-alert">0</div>
+                    <div class="stat-label">待回款提醒</div>
+                </div>
+            </div>
+
+            <!-- 功能入口 -->
+            <div class="menu-grid">
+                <a href="pages/project-list.html" class="menu-item primary">
+                    <span class="menu-icon">📋</span>
+                    <span class="menu-text">项目列表</span>
+                </a>
+                <a href="pages/prediction.html" class="menu-item">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-text">项目预测</span>
+                </a>
+                <a href="pages/payment.html" class="menu-item warning">
+                    <span class="menu-icon">💰</span>
+                    <span class="menu-text">回款提醒</span>
+                </a>
+                <a href="pages/cost-record.html" class="menu-item">
+                    <span class="menu-icon">📝</span>
+                    <span class="menu-text">成本记录</span>
+                </a>
+                <a href="pages/invoice.html" class="menu-item">
+                    <span class="menu-icon">🧾</span>
+                    <span class="menu-text">票据管理</span>
+                </a>
+                <a href="pages/report.html" class="menu-item">
+                    <span class="menu-icon">📈</span>
+                    <span class="menu-text">盈亏报表</span>
+                </a>
+            </div>
+
+            <!-- 最近项目 -->
+            <div class="recent-section">
+                <h3>最近项目</h3>
+                <div class="recent-list" id="recent-projects">
+                    <!-- 动态加载 -->
+                    <div class="empty-tip">暂无项目，点击"项目列表"新建</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部导航 -->
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">首页</span>
+            </a>
+            <a href="pages/project-list.html" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text">项目</span>
+            </a>
+            <a href="pages/payment.html" class="nav-item">
+                <span class="nav-icon">💰</span>
+                <span class="nav-text">回款</span>
+            </a>
+            <a href="pages/report.html" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span class="nav-text">报表</span>
+            </a>
+        </nav>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/cloudStorage.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

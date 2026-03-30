@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>票据管理 - 工程项目管理</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <a href="../index.html" class="back-btn">←</a>
+            <h2 class="page-title">票据管理</h2>
+        </div>
+
+        <!-- 项目选择 -->
+        <div style="padding: 12px 16px; background: #fff;">
+            <select class="form-select" id="project-select">
+                <option value="">选择项目...</option>
+            </select>
+        </div>
+
+        <!-- 票据统计 -->
+        <div id="invoice-stats" style="padding: 16px; background: #fff; margin-bottom: 8px; display: none;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                <div style="background: #e6f7ff; padding: 16px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 12px; color: #1890ff;">收到发票</div>
+                    <div class="amount amount-medium" style="color: #1890ff;" id="received-amount">¥0</div>
+                </div>
+                <div style="background: #f6ffed; padding: 16px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 12px; color: #52c41a;">开出发票</div>
+                    <div class="amount amount-medium profit-positive" id="issued-amount">¥0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 票据列表 -->
+        <div class="main-content" style="padding-top: 8px;">
+            <div id="invoice-list"></div>
+        </div>
+
+        <!-- 添加按钮 -->
+        <button class="fab" id="add-btn" style="display: none;">+</button>
+    </div>
+
+    <!-- 添加票据弹窗 -->
+    <div id="add-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center;">
+        <div style="background: #fff; width: 100%; max-width: 480px; border-radius: 16px 16px 0 0; padding: 20px;">
+            <h3 style="margin-bottom: 16px;">添加票据</h3>
+            <form id="invoice-form">
+                <div class="form-group">
+                    <label class="form-label">票据类型 *</label>
+                    <select class="form-select" id="invoice-type" required>
+                        <option value="收到">收到发票（对方开给我方）</option>
+                        <option value="开出">开出发票（我方开给对方）</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">金额（元）*</label>
+                    <input type="number" class="form-input" id="invoice-amount" placeholder="输入金额" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">发票号码</label>
+                    <input type="text" class="form-input" id="invoice-number" placeholder="发票号码">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">日期</label>
+                    <input type="date" class="form-input" id="invoice-date">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">对方单位</label>
+                    <input type="text" class="form-input" id="invoice-party" placeholder="开票/收票方名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <input type="text" class="form-input" id="invoice-remark" placeholder="备注说明">
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button type="button" class="btn btn-block" style="background: #f5f5f5; color: #666;" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary btn-block">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/cloudStorage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        let currentProjectId = '';
+
+        // 加载项目
+        function loadProjects() {
+            const projects = ProjectStore.getAll();
+            const select = document.getElementById('project-select');
+            
+            const params = Utils.getUrlParams();
+            if (params.projectId) {
+                currentProjectId = params.projectId;
+            }
+
+            select.innerHTML = '<option value="">选择项目...</option>' + 
+                projects.map(p => `<option value="${p.id}" ${p.id === currentProjectId ? 'selected' : ''}>${p.name}</option>`).join('');
+
+            if (currentProjectId) {
+                loadInvoices();
+            }
+        }
+
+        document.getElementById('project-select').addEventListener('change', function() {
+            currentProjectId = this.value;
+            loadInvoices();
+        });
+
+        // 加载票据
+        function loadInvoices() {
+            const container = document.getElementById('invoice-list');
+            const statsArea = document.getElementById('invoice-stats');
+            const addBtn = document.getElementById('add-btn');
+
+            if (!currentProjectId) {
+                container.innerHTML = '<div class="empty-tip">请先选择项目</div>';
+                statsArea.style.display = 'none';
+                addBtn.style.display = 'none';
+                return;
+            }
+
+            addBtn.style.display = 'flex';
+            const invoices = InvoiceStore.getByProjectId(currentProjectId);
+            const stats = InvoiceStore.getInvoiceStats(currentProjectId);
+
+            statsArea.style.display = 'block';
+            document.getElementById('received-amount').textContent = Utils.formatMoney(stats.received);
+            document.getElementById('issued-amount').textContent = Utils.formatMoney(stats.issued);
+
+            if (invoices.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无票据记录</div>';
+                return;
+            }
+
+            container.innerHTML = invoices.sort((a, b) => new Date(b.date) - new Date(a.date)).map(i => `
+                <div class="list-item">
+                    <div class="list-item-content">
+                        <div class="list-item-title">
+                            <span class="tag ${i.type === '收到' ? 'tag-primary' : 'tag-success'}">${i.type}</span>
+                            ${Utils.formatMoney(i.amount)}
+                        </div>
+                        <div class="list-item-subtitle">
+                            ${Utils.formatDate(i.date, 'full')}
+                            ${i.number ? ` | 票号: ${i.number}` : ''}
+                            ${i.party ? ` | ${i.party}` : ''}
+                            ${i.remark ? ` | ${i.remark}` : ''}
+                        </div>
+                    </div>
+                    <button onclick="deleteInvoice('${i.id}')" style="font-size: 11px; color: #ff4d4f; background: none; border: none; cursor: pointer;">删除</button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteInvoice(id) {
+            const confirmed = await Utils.confirm('确定要删除这条记录吗？');
+            if (confirmed) {
+                InvoiceStore.delete(id);
+                Utils.showToast('已删除');
+                loadInvoices();
+            }
+        }
+
+        document.getElementById('add-btn').addEventListener('click', function() {
+            document.getElementById('add-modal').style.display = 'flex';
+            document.getElementById('invoice-date').value = new Date().toISOString().split('T')[0];
+        });
+
+        function closeModal() {
+            document.getElementById('add-modal').style.display = 'none';
+            document.getElementById('invoice-form').reset();
+        }
+
+        document.getElementById('add-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        document.getElementById('invoice-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const data = {
+                projectId: currentProjectId,
+                type: document.getElementById('invoice-type').value,
+                amount: document.getElementById('invoice-amount').value,
+                number: document.getElementById('invoice-number').value,
+                date: document.getElementById('invoice-date').value,
+                party: document.getElementById('invoice-party').value,
+                remark: document.getElementById('invoice-remark').value
+            };
+
+            if (!data.amount) {
+                Utils.showToast('请输入金额');
+                return;
+            }
+
+            InvoiceStore.add(data);
+            Utils.showToast('添加成功');
+            closeModal();
+            loadInvoices();
+        });
+
+        loadProjects();
+    </script>
+</body>
+</html>

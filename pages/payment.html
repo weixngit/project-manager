@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>回款管理 - 工程项目管理</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <a href="../index.html" class="back-btn">←</a>
+            <h2 class="page-title">回款管理</h2>
+        </div>
+
+        <!-- 提醒区域 -->
+        <div id="alert-area" style="padding: 12px 16px;"></div>
+
+        <!-- 项目选择 -->
+        <div style="padding: 12px 16px; background: #fff;">
+            <select class="form-select" id="project-select">
+                <option value="">选择项目...</option>
+            </select>
+        </div>
+
+        <!-- 回款统计 -->
+        <div id="payment-stats" style="padding: 16px; background: #fff; margin-bottom: 8px; display: none;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                <div style="background: #f6ffed; padding: 16px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 12px; color: #52c41a;">已收款</div>
+                    <div class="amount amount-medium profit-positive" id="paid-amount">¥0</div>
+                </div>
+                <div style="background: #fff7e6; padding: 16px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 12px; color: #faad14;">待收款</div>
+                    <div class="amount amount-medium" style="color: #faad14;" id="pending-amount">¥0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 回款列表 -->
+        <div class="main-content" style="padding-top: 8px;">
+            <div id="payment-list"></div>
+        </div>
+
+        <!-- 添加按钮 -->
+        <button class="fab" id="add-btn" style="display: none;">+</button>
+    </div>
+
+    <!-- 添加回款弹窗 -->
+    <div id="add-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center;">
+        <div style="background: #fff; width: 100%; max-width: 480px; border-radius: 16px 16px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-bottom: 16px;">添加回款节点</h3>
+            <form id="payment-form">
+                <div class="form-group">
+                    <label class="form-label">回款金额（元）*</label>
+                    <input type="number" class="form-input" id="payment-amount" placeholder="输入金额" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">付款方式</label>
+                    <select class="form-select" id="payment-type">
+                        <option value="progress">进度款</option>
+                        <option value="milestone">节点款</option>
+                        <option value="final" selected>尾款（完工验收后）</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">预计回款日期 *</label>
+                    <input type="date" class="form-input" id="payment-expected-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">实际回款日期</label>
+                    <input type="date" class="form-input" id="payment-actual-date">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select class="form-select" id="payment-status">
+                        <option value="待收款">待收款</option>
+                        <option value="已收款">已收款</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <input type="text" class="form-input" id="payment-remark" placeholder="如：完工验收后付95%">
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button type="button" class="btn btn-block" style="background: #f5f5f5; color: #666;" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary btn-block">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/cloudStorage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        let currentProjectId = '';
+
+        // 初始化
+        function init() {
+            loadProjects();
+            loadAlerts();
+        }
+
+        // 加载提醒
+        function loadAlerts() {
+            const overdue = PaymentStore.getOverdue();
+            const upcoming = PaymentStore.getUpcoming(7);
+            const alertArea = document.getElementById('alert-area');
+
+            if (overdue.length === 0 && upcoming.length === 0) {
+                alertArea.style.display = 'none';
+                return;
+            }
+
+            let html = '';
+            if (overdue.length > 0) {
+                html += `
+                    <div style="background: #fff2f0; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+                        <div style="font-size: 13px; color: #ff4d4f; font-weight: 600;">⚠️ 已逾期 ${overdue.length} 笔</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                            ${overdue.map(p => {
+                                const project = ProjectStore.getById(p.projectId);
+                                return `${project ? project.name : '未知项目'}: ${Utils.formatMoney(p.amount)}`;
+                            }).join('、')}
+                        </div>
+                    </div>
+                `;
+            }
+            if (upcoming.length > 0) {
+                html += `
+                    <div style="background: #fff7e6; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 13px; color: #faad14; font-weight: 600;">📅 7天内到期 ${upcoming.length} 笔</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                            ${upcoming.map(p => {
+                                const project = ProjectStore.getById(p.projectId);
+                                return `${project ? project.name : '未知项目'}: ${Utils.formatMoney(p.amount)}`;
+                            }).join('、')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            alertArea.innerHTML = html;
+        }
+
+        // 加载项目列表
+        function loadProjects() {
+            const projects = ProjectStore.getAll();
+            const select = document.getElementById('project-select');
+            
+            const params = Utils.getUrlParams();
+            if (params.projectId) {
+                currentProjectId = params.projectId;
+            }
+
+            select.innerHTML = '<option value="">选择项目...</option>' + 
+                projects.map(p => `<option value="${p.id}" ${p.id === currentProjectId ? 'selected' : ''}>${p.name}</option>`).join('');
+
+            if (currentProjectId) {
+                loadPayments();
+            }
+        }
+
+        // 选择项目
+        document.getElementById('project-select').addEventListener('change', function() {
+            currentProjectId = this.value;
+            loadPayments();
+        });
+
+        // 加载回款列表
+        function loadPayments() {
+            const container = document.getElementById('payment-list');
+            const statsArea = document.getElementById('payment-stats');
+            const addBtn = document.getElementById('add-btn');
+
+            if (!currentProjectId) {
+                container.innerHTML = '<div class="empty-tip">请先选择项目</div>';
+                statsArea.style.display = 'none';
+                addBtn.style.display = 'none';
+                return;
+            }
+
+            addBtn.style.display = 'flex';
+            const payments = PaymentStore.getByProjectId(currentProjectId);
+            const totalPaid = PaymentStore.getTotalPaid(currentProjectId);
+            const totalPending = PaymentStore.getTotalPending(currentProjectId);
+
+            // 渲染统计
+            statsArea.style.display = 'block';
+            document.getElementById('paid-amount').textContent = Utils.formatMoney(totalPaid);
+            document.getElementById('pending-amount').textContent = Utils.formatMoney(totalPending);
+
+            // 渲染列表
+            if (payments.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无回款记录</div>';
+                return;
+            }
+
+            container.innerHTML = payments.sort((a, b) => new Date(b.expectedDate) - new Date(a.expectedDate)).map(p => {
+                const isOverdue = p.status === '待收款' && p.expectedDate && new Date(p.expectedDate) < new Date();
+                return `
+                    <div class="list-item" style="${isOverdue ? 'background: #fff2f0;' : ''}">
+                        <div class="list-item-content">
+                            <div class="list-item-title">
+                                ${Utils.formatMoney(p.amount)}
+                                ${isOverdue ? '<span style="color: #ff4d4f; font-size: 12px; margin-left: 8px;">已逾期</span>' : ''}
+                            </div>
+                            <div class="list-item-subtitle">
+                                预计: ${Utils.formatDate(p.expectedDate, 'full')}
+                                ${p.actualDate ? ` | 实际: ${Utils.formatDate(p.actualDate, 'full')}` : ''}
+                                ${p.remark ? ` | ${p.remark}` : ''}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="tag ${Utils.getStatusTag(p.status)}">${p.status}</span>
+                            <div style="margin-top: 8px;">
+                                <button onclick="toggleStatus('${p.id}')" style="font-size: 11px; color: #1890ff; background: none; border: none; cursor: pointer;">
+                                    ${p.status === '待收款' ? '标记已收款' : '标记待收款'}
+                                </button>
+                                <button onclick="deletePayment('${p.id}')" style="font-size: 11px; color: #ff4d4f; background: none; border: none; cursor: pointer; margin-left: 8px;">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 切换状态
+        function toggleStatus(id) {
+            const payment = PaymentStore.getById(Storage.KEYS.PAYMENTS, id);
+            if (payment) {
+                const newStatus = payment.status === '待收款' ? '已收款' : '待收款';
+                const updates = { status: newStatus };
+                if (newStatus === '已收款') {
+                    updates.actualDate = new Date().toISOString().split('T')[0];
+                }
+                PaymentStore.update(id, updates);
+                Utils.showToast('状态已更新');
+                loadPayments();
+                loadAlerts();
+            }
+        }
+
+        // 删除
+        async function deletePayment(id) {
+            const confirmed = await Utils.confirm('确定要删除这条记录吗？');
+            if (confirmed) {
+                PaymentStore.delete(id);
+                Utils.showToast('已删除');
+                loadPayments();
+                loadAlerts();
+            }
+        }
+
+        // 打开弹窗
+        document.getElementById('add-btn').addEventListener('click', function() {
+            document.getElementById('add-modal').style.display = 'flex';
+            document.getElementById('payment-expected-date').value = new Date().toISOString().split('T')[0];
+        });
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('add-modal').style.display = 'none';
+            document.getElementById('payment-form').reset();
+        }
+
+        document.getElementById('add-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // 提交
+        document.getElementById('payment-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const data = {
+                projectId: currentProjectId,
+                amount: document.getElementById('payment-amount').value,
+                type: document.getElementById('payment-type').value,
+                expectedDate: document.getElementById('payment-expected-date').value,
+                actualDate: document.getElementById('payment-actual-date').value,
+                status: document.getElementById('payment-status').value,
+                remark: document.getElementById('payment-remark').value
+            };
+
+            if (!data.amount || !data.expectedDate) {
+                Utils.showToast('请填写完整信息');
+                return;
+            }
+
+            PaymentStore.add(data);
+            Utils.showToast('添加成功');
+            closeModal();
+            loadPayments();
+            loadAlerts();
+        });
+
+        // 初始化
+        init();
+    </script>
+</body>
+</html>

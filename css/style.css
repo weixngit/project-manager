@@ -1,0 +1,472 @@
+/* 工程项目管理系统 - 移动端样式 */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #1890ff;
+    --success-color: #52c41a;
+    --warning-color: #faad14;
+    --danger-color: #ff4d4f;
+    --text-color: #333;
+    --text-secondary: #666;
+    --border-color: #e8e8e8;
+    --bg-color: #f5f5f5;
+    --card-bg: #fff;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+.app-container {
+    max-width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 顶部标题栏 */
+.header {
+    background: linear-gradient(135deg, var(--primary-color), #40a9ff);
+    color: #fff;
+    padding: 20px 16px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.header .subtitle {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+/* 主内容区 */
+.main-content {
+    flex: 1;
+    padding: 16px;
+    padding-bottom: 80px;
+}
+
+/* 统计卡片 */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.stat-card.warning {
+    background: linear-gradient(135deg, #fff7e6, #ffe7ba);
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 4px;
+}
+
+.stat-card.warning .stat-value {
+    color: var(--warning-color);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+/* 功能菜单 */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.menu-item {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px 12px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.menu-item:active {
+    transform: scale(0.95);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.menu-item.primary {
+    background: linear-gradient(135deg, var(--primary-color), #40a9ff);
+    color: #fff;
+}
+
+.menu-item.warning {
+    background: linear-gradient(135deg, var(--warning-color), #ffc53d);
+    color: #fff;
+}
+
+.menu-icon {
+    display: block;
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.menu-text {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* 最近项目 */
+.recent-section h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: var(--text-color);
+}
+
+.recent-list {
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.recent-item {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.recent-item:last-child {
+    border-bottom: none;
+}
+
+.recent-item .project-name {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.recent-item .project-status {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: #e6f7ff;
+    color: var(--primary-color);
+}
+
+.empty-tip {
+    padding: 32px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* 底部导航 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+    z-index: 100;
+}
+
+.nav-item {
+    text-decoration: none;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 4px 12px;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-icon {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+.nav-text {
+    display: block;
+    font-size: 11px;
+}
+
+/* 按钮样式 */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn:active {
+    opacity: 0.8;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: #fff;
+}
+
+.btn-warning {
+    background: var(--warning-color);
+    color: #fff;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: #fff;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+/* 表单样式 */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.form-select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+}
+
+/* 页面头部 */
+.page-header {
+    background: var(--card-bg);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.back-btn {
+    font-size: 24px;
+    text-decoration: none;
+    color: var(--text-color);
+    margin-right: 12px;
+}
+
+.page-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* 列表项 */
+.list-item {
+    background: var(--card-bg);
+    padding: 16px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.list-item-content {
+    flex: 1;
+}
+
+.list-item-title {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.list-item-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* 标签 */
+.tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.tag-success {
+    background: #f6ffed;
+    color: var(--success-color);
+}
+
+.tag-warning {
+    background: #fff7e6;
+    color: var(--warning-color);
+}
+
+.tag-danger {
+    background: #fff2f0;
+    color: var(--danger-color);
+}
+
+.tag-primary {
+    background: #e6f7ff;
+    color: var(--primary-color);
+}
+
+/* 浮动添加按钮 */
+.fab {
+    position: fixed;
+    bottom: 88px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+    cursor: pointer;
+    z-index: 50;
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+/* 进度条 */
+.progress-bar {
+    height: 8px;
+    background: #e8e8e8;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+/* 卡片 */
+.card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.card-body {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* 利润显示 */
+.profit-positive {
+    color: var(--success-color);
+}
+
+.profit-negative {
+    color: var(--danger-color);
+}
+
+/* 金额显示 */
+.amount {
+    font-family: 'DIN Alternate', sans-serif;
+    font-weight: 600;
+}
+
+.amount-large {
+    font-size: 28px;
+}
+
+.amount-medium {
+    font-size: 20px;
+}
+
+/* 响应式适配 */
+@media screen and (min-width: 768px) {
+    .app-container {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>项目列表 - 工程项目管理</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <a href="../index.html" class="back-btn">←</a>
+            <h2 class="page-title">项目列表</h2>
+        </div>
+
+        <!-- 搜索栏 -->
+        <div style="padding: 12px 16px; background: #fff;">
+            <input type="text" id="search-input" class="form-input" placeholder="搜索项目名称..." style="margin: 0;">
+        </div>
+
+        <!-- 筛选标签 -->
+        <div style="padding: 8px 16px; background: #fff; display: flex; gap: 8px; overflow-x: auto;">
+            <button class="filter-btn active" data-status="all">全部</button>
+            <button class="filter-btn" data-status="进行中">进行中</button>
+            <button class="filter-btn" data-status="已完成">已完成</button>
+            <button class="filter-btn" data-status="已暂停">已暂停</button>
+        </div>
+
+        <!-- 项目列表 -->
+        <div class="main-content" style="padding-top: 8px;">
+            <div id="project-list"></div>
+        </div>
+
+        <!-- 添加按钮 -->
+        <button class="fab" onclick="location.href='project-edit.html'">+</button>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/cloudStorage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let searchKeyword = '';
+
+        // 加载项目列表
+        function loadProjects() {
+            const container = document.getElementById('project-list');
+            let projects = ProjectStore.getAll();
+
+            // 筛选状态
+            if (currentFilter !== 'all') {
+                projects = projects.filter(p => p.status === currentFilter);
+            }
+
+            // 搜索
+            if (searchKeyword) {
+                projects = projects.filter(p => 
+                    p.name.includes(searchKeyword) || 
+                    (p.client && p.client.includes(searchKeyword))
+                );
+            }
+
+            if (projects.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-tip">
+                        <p style="font-size: 48px; margin-bottom: 16px;">📁</p>
+                        <p>暂无项目</p>
+                        <p style="font-size: 12px; color: #999; margin-top: 8px;">点击右下角 + 新建项目</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = projects.map(p => {
+                const profit = Utils.calculateProfit(p.id);
+                const totalPaid = PaymentStore.getTotalPaid(p.id);
+                const totalPending = PaymentStore.getTotalPending(p.id);
+                
+                return `
+                    <a href="project-detail.html?id=${p.id}" class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${p.name}</div>
+                            <div class="list-item-subtitle">
+                                合同: ${Utils.formatMoney(p.contractAmount)} | 
+                                利润: <span class="${profit && profit.profit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                                    ${profit ? Utils.formatMoney(profit.profit) : '¥0'}
+                                </span>
+                            </div>
+                            <div style="margin-top: 8px;">
+                                <div class="progress-bar" style="width: 100%;">
+                                    <div class="progress-fill" style="width: ${p.progress || 0}%;"></div>
+                                </div>
+                                <div style="font-size: 11px; color: #999; margin-top: 4px;">
+                                    回款: ${Utils.formatMoney(totalPaid)} / ${Utils.formatMoney(parseFloat(p.contractAmount) || 0)}
+                                </div>
+                            </div>
+                        </div>
+                        <span class="tag ${Utils.getStatusTag(p.status)}">${p.status}</span>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // 绑定筛选
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.status;
+                loadProjects();
+            });
+        });
+
+        // 绑定搜索
+        document.getElementById('search-input').addEventListener('input', Utils.debounce(function(e) {
+            searchKeyword = e.target.value;
+            loadProjects();
+        }, 300));
+
+        // 初始化
+        loadProjects();
+    </script>
+
+    <style>
+        .filter-btn {
+            padding: 6px 14px;
+            border: 1px solid #e8e8e8;
+            border-radius: 16px;
+            background: #fff;
+            font-size: 13px;
+            color: #666;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .filter-btn.active {
+            background: #1890ff;
+            color: #fff;
+            border-color: #1890ff;
+        }
+        .list-item {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+</body>
+</html>

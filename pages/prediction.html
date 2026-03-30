@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>项目预测 - 工程项目管理</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <a href="../index.html" class="back-btn">←</a>
+            <h2 class="page-title">项目预测</h2>
+        </div>
+
+        <!-- 输入表单 -->
+        <div class="main-content">
+            <form id="prediction-form" class="card">
+                <h3 style="margin-bottom: 16px;">💰 项目盈亏预测</h3>
+                <p style="font-size: 13px; color: #666; margin-bottom: 20px;">
+                    输入项目信息，系统自动计算预估利润和风险
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label">合同金额（元）*</label>
+                    <input type="number" class="form-input" id="contractAmount" placeholder="输入合同总金额" required>
+                </div>
+
+                <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                    <h4 style="font-size: 14px; margin-bottom: 12px;">预计成本</h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">👷 人工分包款</label>
+                        <input type="number" class="form-input" id="estimatedLabor" placeholder="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">📦 设备材料费</label>
+                        <input type="number" class="form-input" id="estimatedMaterial" placeholder="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">🤝 商务费</label>
+                        <input type="number" class="form-input" id="estimatedBusiness" placeholder="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">🚜 机械租赁</label>
+                        <input type="number" class="form-input" id="estimatedMachinery" placeholder="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">🚗 交通费</label>
+                        <input type="number" class="form-input" id="estimatedTransport" placeholder="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label">📋 杂费</label>
+                        <input type="number" class="form-input" id="estimatedOther" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">💰 预计税费</label>
+                        <input type="number" class="form-input" id="estimatedTax" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="hasDownPayment" style="width: 18px; height: 18px;">
+                        <span style="font-size: 14px;">有预付款</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 8px;">计算预测结果</button>
+            </form>
+
+            <!-- 结果区域 -->
+            <div id="result-area" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        // 表单提交
+        document.getElementById('prediction-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculate();
+        });
+
+        // 实时计算
+        const inputs = document.querySelectorAll('input[type="number"]');
+        inputs.forEach(input => {
+            input.addEventListener('input', debounce(calculate, 500));
+        });
+
+        function debounce(fn, delay) {
+            let timer = null;
+            return function(...args) {
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        function calculate() {
+            const contractAmount = parseFloat(document.getElementById('contractAmount').value) || 0;
+            if (contractAmount === 0) {
+                document.getElementById('result-area').style.display = 'none';
+                return;
+            }
+
+            const data = {
+                contractAmount,
+                estimatedLabor: parseFloat(document.getElementById('estimatedLabor').value) || 0,
+                estimatedMaterial: parseFloat(document.getElementById('estimatedMaterial').value) || 0,
+                estimatedBusiness: parseFloat(document.getElementById('estimatedBusiness').value) || 0,
+                estimatedMachinery: parseFloat(document.getElementById('estimatedMachinery').value) || 0,
+                estimatedTransport: parseFloat(document.getElementById('estimatedTransport').value) || 0,
+                estimatedOther: parseFloat(document.getElementById('estimatedOther').value) || 0,
+                estimatedTax: parseFloat(document.getElementById('estimatedTax').value) || 0,
+                hasDownPayment: document.getElementById('hasDownPayment').checked
+            };
+
+            const result = Utils.calculatePrediction(data);
+            renderResult(result, data);
+        }
+
+        function renderResult(result, data) {
+            const area = document.getElementById('result-area');
+            area.style.display = 'block';
+
+            const profitClass = result.estimatedProfit >= 0 ? 'profit-positive' : 'profit-negative';
+            const statusText = result.isViable ? '✅ 项目可行' : '⚠️ 需要谨慎';
+            const statusBg = result.isViable ? '#f6ffed' : '#fff7e6';
+
+            area.innerHTML = `
+                <div class="card" style="margin-top: 16px; background: ${statusBg};">
+                    <h3 style="margin-bottom: 16px; text-align: center;">预测结果</h3>
+                    
+                    <div style="text-align: center; padding: 20px 0;">
+                        <div style="font-size: 14px; color: #666;">预计净利润</div>
+                        <div class="amount amount-large ${profitClass}" style="font-size: 36px;">
+                            ${Utils.formatMoney(result.estimatedProfit)}
+                        </div>
+                        <div style="font-size: 16px; color: #666; margin-top: 8px;">
+                            利润率 <strong style="font-size: 20px;">${result.profitRate}%</strong>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; padding: 12px; background: #fff; border-radius: 8px; margin-top: 16px;">
+                        <span style="font-size: 16px; font-weight: 600;">${statusText}</span>
+                    </div>
+                </div>
+
+                <!-- 成本构成 -->
+                <div class="card" style="margin-top: 8px;">
+                    <h4 style="margin-bottom: 12px;">成本构成</h4>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${renderCostBar('人工分包', data.estimatedLabor, result.totalEstimatedCost)}
+                        ${renderCostBar('设备材料', data.estimatedMaterial, result.totalEstimatedCost)}
+                        ${renderCostBar('商务费', data.estimatedBusiness, result.totalEstimatedCost)}
+                        ${renderCostBar('机械租赁', data.estimatedMachinery, result.totalEstimatedCost)}
+                        ${renderCostBar('交通费', data.estimatedTransport, result.totalEstimatedCost)}
+                        ${renderCostBar('杂费', data.estimatedOther, result.totalEstimatedCost)}
+                        ${renderCostBar('税费', data.estimatedTax, result.totalEstimatedCost)}
+                    </div>
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e8e8e8; text-align: center;">
+                        <span style="font-size: 14px; color: #666;">总成本：</span>
+                        <span style="font-size: 20px; font-weight: 700; color: #ff4d4f;">
+                            ${Utils.formatMoney(result.totalEstimatedCost)}
+                        </span>
+                    </div>
+                </div>
+
+                ${result.risks.length > 0 ? `
+                    <!-- 风险提示 -->
+                    <div class="card" style="margin-top: 8px; border-left: 4px solid #faad14;">
+                        <h4 style="margin-bottom: 12px; color: #faad14;">⚠️ 风险提示</h4>
+                        ${result.risks.map(r => `
+                            <div style="font-size: 14px; color: #666; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                ${r.text}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <!-- 建议操作 -->
+                <div style="margin-top: 16px; display: flex; gap: 12px;">
+                    <button class="btn btn-block" style="background: #f5f5f5; color: #666;" onclick="saveAsProject()">保存为项目</button>
+                    <button class="btn btn-primary btn-block" onclick="resetForm()">重新计算</button>
+                </div>
+            `;
+        }
+
+        function renderCostBar(label, amount, total) {
+            const percent = total > 0 ? (amount / total * 100).toFixed(1) : 0;
+            return `
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+                        <span>${label}</span>
+                        <span>${Utils.formatMoney(amount)} (${percent}%)</span>
+                    </div>
+                    <div class="progress-bar" style="height: 6px;">
+                        <div class="progress-fill" style="width: ${percent}%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveAsProject() {
+            const name = prompt('请输入项目名称：');
+            if (!name) return;
+
+            const data = {
+                name,
+                contractAmount: document.getElementById('contractAmount').value,
+                taxAmount: document.getElementById('estimatedTax').value
+            };
+
+            const project = ProjectStore.add(data);
+            Utils.showToast('项目已创建');
+            
+            setTimeout(() => {
+                location.href = `project-detail.html?id=${project.id}`;
+            }, 500);
+        }
+
+        function resetForm() {
+            document.getElementById('prediction-form').reset();
+            document.getElementById('result-area').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

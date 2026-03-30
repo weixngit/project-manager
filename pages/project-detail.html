@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>项目详情 - 工程项目管理</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <a href="project-list.html" class="back-btn">←</a>
+            <h2 class="page-title" id="project-name">项目详情</h2>
+            <a href="#" id="edit-link" style="margin-left: auto; color: #1890ff; text-decoration: none;">编辑</a>
+        </div>
+
+        <!-- 内容区 -->
+        <div class="main-content" id="content-area">
+            <!-- 动态加载 -->
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/cloudStorage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        const params = Utils.getUrlParams();
+        const projectId = params.id;
+
+        if (!projectId) {
+            location.href = 'project-list.html';
+        }
+
+        const project = ProjectStore.getById(projectId);
+        
+        if (!project) {
+            document.getElementById('content-area').innerHTML = '<div class="empty-tip">项目不存在</div>';
+        } else {
+            renderDetail();
+        }
+
+        function renderDetail() {
+            document.getElementById('project-name').textContent = project.name;
+            document.getElementById('edit-link').href = `project-edit.html?id=${projectId}`;
+
+            const profit = Utils.calculateProfit(projectId);
+            const costStats = CostStore.getStatsByType(projectId);
+            const totalPaid = PaymentStore.getTotalPaid(projectId);
+            const totalPending = PaymentStore.getTotalPending(projectId);
+            const invoiceStats = InvoiceStore.getInvoiceStats(projectId);
+            const costs = CostStore.getByProjectId(projectId);
+            const payments = PaymentStore.getByProjectId(projectId);
+
+            const html = `
+                <!-- 盈亏概览 -->
+                <div class="card">
+                    <h3 style="margin-bottom: 12px;">盈亏概览</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        <div>
+                            <div style="font-size: 12px; color: #999;">合同金额</div>
+                            <div class="amount amount-medium">${Utils.formatMoney(project.contractAmount)}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #999;">已回款</div>
+                            <div class="amount amount-medium">${Utils.formatMoney(totalPaid)}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #999;">总成本</div>
+                            <div class="amount" style="color: #ff4d4f;">${Utils.formatMoney(profit ? profit.totalCost : 0)}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #999;">待回款</div>
+                            <div class="amount" style="color: #faad14;">${Utils.formatMoney(totalPending)}</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 14px; font-weight: 600;">净利润</span>
+                            <span class="amount amount-large ${profit && profit.profit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                                ${profit ? Utils.formatMoney(profit.profit) : '¥0'}
+                            </span>
+                        </div>
+                        <div style="font-size: 12px; color: #999; margin-top: 4px;">
+                            利润率: ${profit ? profit.profitRate : 0}%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 项目进度 -->
+                <div class="card">
+                    <h3 style="margin-bottom: 12px;">项目进度</h3>
+                    <div class="progress-bar" style="height: 12px;">
+                        <div class="progress-fill" style="width: ${project.progress || 0}%;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                        <span class="tag ${Utils.getStatusTag(project.status)}">${project.status}</span>
+                        <span style="font-size: 14px; font-weight: 600;">${project.progress || 0}%</span>
+                    </div>
+                </div>
+
+                <!-- 成本分布 -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3>成本分布</h3>
+                        <a href="cost-record.html?projectId=${projectId}" style="font-size: 13px; color: #1890ff; text-decoration: none;">记录成本 →</a>
+                    </div>
+                    ${renderCostStats(costStats, profit)}
+                </div>
+
+                <!-- 回款情况 -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3>回款情况</h3>
+                        <a href="payment.html?projectId=${projectId}" style="font-size: 13px; color: #1890ff; text-decoration: none;">管理回款 →</a>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        <div style="background: #f6ffed; padding: 12px; border-radius: 8px;">
+                            <div style="font-size: 12px; color: #52c41a;">已收款</div>
+                            <div class="amount">${Utils.formatMoney(totalPaid)}</div>
+                        </div>
+                        <div style="background: #fff7e6; padding: 12px; border-radius: 8px;">
+                            <div style="font-size: 12px; color: #faad14;">待收款</div>
+                            <div class="amount">${Utils.formatMoney(totalPending)}</div>
+                        </div>
+                    </div>
+                    ${payments.length > 0 ? `
+                        <div style="margin-top: 12px;">
+                            ${payments.slice(0, 3).map(p => `
+                                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                                    <span style="font-size: 13px;">${p.remark || '回款'}</span>
+                                    <span style="font-size: 13px;">${Utils.formatMoney(p.amount)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- 票据统计 -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3>票据统计</h3>
+                        <a href="invoice.html?projectId=${projectId}" style="font-size: 13px; color: #1890ff; text-decoration: none;">管理票据 →</a>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                        <div>
+                            <div style="font-size: 12px; color: #999;">收到发票</div>
+                            <div class="amount">${Utils.formatMoney(invoiceStats.received)}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #999;">开出发票</div>
+                            <div class="amount">${Utils.formatMoney(invoiceStats.issued)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 项目信息 -->
+                <div class="card">
+                    <h3 style="margin-bottom: 12px;">项目信息</h3>
+                    <div style="font-size: 14px; color: #666; line-height: 2;">
+                        <div><strong>甲方：</strong>${project.client || '-'}</div>
+                        <div><strong>负责人：</strong>${project.manager || '-'}</div>
+                        <div><strong>开工日期：</strong>${project.startDate || '-'}</div>
+                        <div><strong>预计完工：</strong>${project.endDate || '-'}</div>
+                        <div><strong>预计税费：</strong>${Utils.formatMoney(project.taxAmount)}</div>
+                        ${project.remark ? `<div><strong>备注：</strong>${project.remark}</div>` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('content-area').innerHTML = html;
+        }
+
+        function renderCostStats(stats, profit) {
+            if (Object.keys(stats).length === 0) {
+                return '<div style="text-align: center; color: #999; padding: 20px;">暂无成本记录</div>';
+            }
+
+            const typeLabels = {
+                labor: '人工分包',
+                material: '设备材料',
+                business: '商务费',
+                machinery: '机械租赁',
+                transport: '交通费',
+                other: '杂费'
+            };
+
+            return Object.entries(stats).map(([type, amount]) => `
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                    <span style="font-size: 13px;">${typeLabels[type] || type}</span>
+                    <span style="font-size: 13px; color: #ff4d4f;">${Utils.formatMoney(amount)}</span>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

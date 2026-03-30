@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>成本记录 - 工程项目管理</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 页面头部 -->
+        <div class="page-header">
+            <a href="../index.html" class="back-btn">←</a>
+            <h2 class="page-title">成本记录</h2>
+        </div>
+
+        <!-- 项目选择 -->
+        <div style="padding: 12px 16px; background: #fff;">
+            <select class="form-select" id="project-select">
+                <option value="">选择项目...</option>
+            </select>
+        </div>
+
+        <!-- 成本统计 -->
+        <div id="cost-stats" style="padding: 16px; background: #fff; margin-bottom: 8px; display: none;">
+            <h3 style="font-size: 14px; margin-bottom: 12px;">成本统计</h3>
+            <div id="stats-content"></div>
+        </div>
+
+        <!-- 成本列表 -->
+        <div class="main-content" style="padding-top: 8px;">
+            <div id="cost-list"></div>
+        </div>
+
+        <!-- 添加按钮 -->
+        <button class="fab" id="add-btn" style="display: none;">+</button>
+    </div>
+
+    <!-- 添加成本弹窗 -->
+    <div id="add-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center;">
+        <div style="background: #fff; width: 100%; max-width: 480px; border-radius: 16px 16px 0 0; padding: 20px;">
+            <h3 style="margin-bottom: 16px;">记录成本</h3>
+            <form id="cost-form">
+                <div class="form-group">
+                    <label class="form-label">成本类型 *</label>
+                    <select class="form-select" id="cost-type" required>
+                        <option value="">选择类型</option>
+                        ${COST_TYPES.map(t => `<option value="${t.value}">${t.icon} ${t.label}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">金额（元）*</label>
+                    <input type="number" class="form-input" id="cost-amount" placeholder="输入金额" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">日期</label>
+                    <input type="date" class="form-input" id="cost-date">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">说明</label>
+                    <input type="text" class="form-input" id="cost-remark" placeholder="简要说明">
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                    <button type="button" class="btn btn-block" style="background: #f5f5f5; color: #666;" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary btn-block">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/cloudStorage.js"></script>
+    <script src="../js/utils.js"></script>
+    <script>
+        let currentProjectId = '';
+
+        // 加载项目列表
+        function loadProjects() {
+            const projects = ProjectStore.getAll();
+            const select = document.getElementById('project-select');
+            
+            // 检查URL参数
+            const params = Utils.getUrlParams();
+            if (params.projectId) {
+                currentProjectId = params.projectId;
+            }
+
+            select.innerHTML = '<option value="">选择项目...</option>' + 
+                projects.map(p => `<option value="${p.id}" ${p.id === currentProjectId ? 'selected' : ''}>${p.name}</option>`).join('');
+
+            if (currentProjectId) {
+                loadCosts();
+            }
+        }
+
+        // 选择项目
+        document.getElementById('project-select').addEventListener('change', function() {
+            currentProjectId = this.value;
+            loadCosts();
+        });
+
+        // 加载成本列表
+        function loadCosts() {
+            const container = document.getElementById('cost-list');
+            const statsArea = document.getElementById('cost-stats');
+            const addBtn = document.getElementById('add-btn');
+
+            if (!currentProjectId) {
+                container.innerHTML = '<div class="empty-tip">请先选择项目</div>';
+                statsArea.style.display = 'none';
+                addBtn.style.display = 'none';
+                return;
+            }
+
+            addBtn.style.display = 'flex';
+            const costs = CostStore.getByProjectId(currentProjectId);
+            const stats = CostStore.getStatsByType(currentProjectId);
+
+            // 渲染统计
+            statsArea.style.display = 'block';
+            const totalCost = Object.values(stats).reduce((a, b) => a + b, 0);
+            document.getElementById('stats-content').innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                    ${Object.entries(stats).map(([type, amount]) => {
+                        const typeInfo = COST_TYPES.find(t => t.value === type);
+                        return `
+                            <div style="text-align: center; padding: 8px; background: #f5f5f5; border-radius: 8px;">
+                                <div style="font-size: 20px;">${typeInfo ? typeInfo.icon : '📋'}</div>
+                                <div style="font-size: 11px; color: #999;">${typeInfo ? typeInfo.label : type}</div>
+                                <div style="font-size: 14px; font-weight: 600;">${Utils.formatMoney(amount)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e8e8e8; text-align: center;">
+                    <span style="font-size: 14px; color: #666;">总成本：</span>
+                    <span style="font-size: 18px; font-weight: 700; color: #ff4d4f;">${Utils.formatMoney(totalCost)}</span>
+                </div>
+            `;
+
+            // 渲染列表
+            if (costs.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无成本记录</div>';
+                return;
+            }
+
+            container.innerHTML = costs.sort((a, b) => new Date(b.date) - new Date(a.date)).map(c => {
+                const typeInfo = COST_TYPES.find(t => t.value === c.type);
+                return `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${typeInfo ? typeInfo.icon : '📋'} ${typeInfo ? typeInfo.label : c.type}</div>
+                            <div class="list-item-subtitle">${Utils.formatDate(c.date, 'full')} ${c.remark ? '· ' + c.remark : ''}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 16px; font-weight: 600; color: #ff4d4f;">-${Utils.formatMoney(c.amount)}</div>
+                            <button onclick="deleteCost('${c.id}')" style="font-size: 11px; color: #999; background: none; border: none; padding: 4px 0; cursor: pointer;">删除</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 打开弹窗
+        document.getElementById('add-btn').addEventListener('click', function() {
+            document.getElementById('add-modal').style.display = 'flex';
+            document.getElementById('cost-date').value = new Date().toISOString().split('T')[0];
+        });
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('add-modal').style.display = 'none';
+            document.getElementById('cost-form').reset();
+        }
+
+        // 点击背景关闭
+        document.getElementById('add-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // 提交表单
+        document.getElementById('cost-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const data = {
+                projectId: currentProjectId,
+                type: document.getElementById('cost-type').value,
+                amount: document.getElementById('cost-amount').value,
+                date: document.getElementById('cost-date').value,
+                remark: document.getElementById('cost-remark').value
+            };
+
+            if (!data.type || !data.amount) {
+                Utils.showToast('请填写完整信息');
+                return;
+            }
+
+            CostStore.add(data);
+            Utils.showToast('记录成功');
+            closeModal();
+            loadCosts();
+        });
+
+        // 删除成本
+        async function deleteCost(id) {
+            const confirmed = await Utils.confirm('确定要删除这条记录吗？');
+            if (confirmed) {
+                CostStore.delete(id);
+                Utils.showToast('已删除');
+                loadCosts();
+            }
+        }
+
+        // 初始化
+        loadProjects();
+    </script>
+</body>
+</html>

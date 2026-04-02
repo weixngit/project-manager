@@ -8,18 +8,15 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- 页面头部 -->
         <div class="page-header">
             <a href="../index.html" class="back-btn">←</a>
             <h2 class="page-title">项目列表</h2>
         </div>
 
-        <!-- 搜索栏 -->
         <div style="padding: 12px 16px; background: #fff;">
             <input type="text" id="search-input" class="form-input" placeholder="搜索项目名称..." style="margin: 0;">
         </div>
 
-        <!-- 筛选标签 -->
         <div style="padding: 8px 16px; background: #fff; display: flex; gap: 8px; overflow-x: auto;">
             <button class="filter-btn active" data-status="all">全部</button>
             <button class="filter-btn" data-status="进行中">进行中</button>
@@ -27,82 +24,132 @@
             <button class="filter-btn" data-status="已暂停">已暂停</button>
         </div>
 
-        <!-- 项目列表 -->
         <div class="main-content" style="padding-top: 8px;">
-            <div id="project-list"></div>
+            <div id="project-list"><div class="empty-tip">加载中...</div></div>
         </div>
 
-        <!-- 添加按钮 -->
         <button class="fab" onclick="location.href='project-edit.html'">+</button>
     </div>
 
     <script src="../js/storage.js"></script>
-    <script src="../js/cloudStorage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
+        // 检查登录
+        const userStr = localStorage.getItem('pm_user');
+        if (!userStr) {
+            window.location.href = 'login.html';
+        }
+        const currentUser = JSON.parse(userStr);
+        
+        const CLOUD = {
+            url: 'https://azspvriaxhlllgtphwgv.supabase.co',
+            key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3B2cmlheGhsbGxndHBod2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTM1OTMsImV4cCI6MjA5MDQyOTU5M30.6F3W6dYQ8DdtWRFBGBIejcms2XCvdMxWBvmOX_AMlAc'
+        };
+        const hdrs = { 'apikey': CLOUD.key, 'Authorization': 'Bearer ' + CLOUD.key };
+        
         let currentFilter = 'all';
         let searchKeyword = '';
 
-        // 加载项目列表
+        async function syncFromCloud() {
+            try {
+                const rp = await fetch(CLOUD.url + '/rest/v1/projects?company_id=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs });
+                const projects = await rp.json();
+                if (projects && projects.length > 0) {
+                    Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({
+                        id: p.id, name: p.name, contractAmount: p.contract_amount,
+                        client: p.client||'', clientContact: p.client_contact||'',
+                        clientPhone: p.client_phone||'', clientAddress: p.client_address||'',
+                        manager: p.manager||'', managerPhone: p.manager_phone||'',
+                        startDate: p.start_date||'', endDate: p.end_date||'',
+                        status: p.status||'进行中', progress: p.progress||0,
+                        invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0,
+                        remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||''
+                    })));
+                }
+                
+                const rc = await fetch(CLOUD.url + '/rest/v1/costs?order=created_at.desc', { headers: hdrs });
+                const costs = await rc.json();
+                if (costs && costs.length > 0) {
+                    Storage.set(Storage.KEYS.COSTS, costs.map(c => ({
+                        id: c.id, projectId: c.project_id, type: c.type,
+                        amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.created_at||''
+                    })));
+                }
+                
+                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?order=expected_date.desc', { headers: hdrs });
+                const payments = await rpay.json();
+                if (payments && payments.length > 0) {
+                    Storage.set(Storage.KEYS.PAYMENTS, payments.map(p => ({
+                        id: p.id, projectId: p.project_id, amount: p.amount, type: p.type||'final',
+                        expectedDate: p.expected_date||'', actualDate: (p.actual_date && p.actual_date !== 'null') ? p.actual_date : '',
+                        remark: p.remark||'', createdAt: p.created_at||''
+                    })));
+                }
+            } catch(e) { console.error('同步失败', e); }
+        }
+
         function loadProjects() {
             const container = document.getElementById('project-list');
             let projects = ProjectStore.getAll();
-
-            // 筛选状态
-            if (currentFilter !== 'all') {
-                projects = projects.filter(p => p.status === currentFilter);
-            }
-
-            // 搜索
-            if (searchKeyword) {
-                projects = projects.filter(p => 
-                    p.name.includes(searchKeyword) || 
-                    (p.client && p.client.includes(searchKeyword))
-                );
-            }
+            
+            // 先显示本地数据（立即可用）
+            renderProjects(projects);
+            
+            // 然后从云端获取数据进行合并
+            fetch(CLOUD.url + '/rest/v1/projects?order=updated_at.desc', { headers: hdrs })
+                .then(function(r) { return r.json(); })
+                .then(function(cloudProjects) {
+                    if (cloudProjects && cloudProjects.length > 0) {
+                        var localIds = projects.map(function(p) { return p.id; });
+                        var newProjects = cloudProjects.filter(function(cp) { return localIds.indexOf(cp.id) === -1; });
+                        
+                        // 只添加云端有但本地没有的项目
+                        if (newProjects.length > 0) {
+                            var newLocal = newProjects.map(function(p) {
+                                return {
+                                    id: p.id, name: p.name, contractAmount: p.contract_amount,
+                                    client: p.client||'', clientContact: p.client_contact||'',
+                                    clientPhone: p.client_phone||'', clientAddress: p.client_address||'',
+                                    manager: p.manager||'', managerPhone: p.manager_phone||'',
+                                    startDate: p.start_date||'', endDate: p.end_date||'',
+                                    status: p.status||'进行中', progress: p.progress||0,
+                                    invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0,
+                                    remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||''
+                                };
+                            });
+                            
+                            var allProjects = projects.concat(newLocal);
+                            Storage.set(Storage.KEYS.PROJECTS, allProjects);
+                            renderProjects(allProjects);
+                        }
+                    }
+                })
+                .catch(function(e) { console.error('merge failed', e); });
+        }
+        
+        function renderProjects(projects) {
+            const container = document.getElementById('project-list');
+            if (currentFilter !== 'all') projects = projects.filter(p => p.status === currentFilter);
+            if (searchKeyword) projects = projects.filter(p => p.name.includes(searchKeyword) || (p.client && p.client.includes(searchKeyword)));
 
             if (projects.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-tip">
-                        <p style="font-size: 48px; margin-bottom: 16px;">📁</p>
-                        <p>暂无项目</p>
-                        <p style="font-size: 12px; color: #999; margin-top: 8px;">点击右下角 + 新建项目</p>
-                    </div>
-                `;
+                container.innerHTML = '<div class="empty-tip"><p style="font-size:48px;margin-bottom:16px;">📁</p><p>暂无项目</p><p style="font-size:12px;color:#999;margin-top:8px;">点击右下角 + 新建项目</p></div>';
                 return;
             }
 
             container.innerHTML = projects.map(p => {
                 const profit = Utils.calculateProfit(p.id);
                 const totalPaid = PaymentStore.getTotalPaid(p.id);
-                const totalPending = PaymentStore.getTotalPending(p.id);
-                
-                return `
-                    <a href="project-detail.html?id=${p.id}" class="list-item">
-                        <div class="list-item-content">
-                            <div class="list-item-title">${p.name}</div>
-                            <div class="list-item-subtitle">
-                                合同: ${Utils.formatMoney(p.contractAmount)} | 
-                                利润: <span class="${profit && profit.profit >= 0 ? 'profit-positive' : 'profit-negative'}">
-                                    ${profit ? Utils.formatMoney(profit.profit) : '¥0'}
-                                </span>
-                            </div>
-                            <div style="margin-top: 8px;">
-                                <div class="progress-bar" style="width: 100%;">
-                                    <div class="progress-fill" style="width: ${p.progress || 0}%;"></div>
-                                </div>
-                                <div style="font-size: 11px; color: #999; margin-top: 4px;">
-                                    回款: ${Utils.formatMoney(totalPaid)} / ${Utils.formatMoney(parseFloat(p.contractAmount) || 0)}
-                                </div>
-                            </div>
-                        </div>
-                        <span class="tag ${Utils.getStatusTag(p.status)}">${p.status}</span>
-                    </a>
-                `;
+                return '<a href="project-detail.html?id=' + p.id + '" class="list-item">' +
+                    '<div class="list-item-content">' +
+                    '<div class="list-item-title">' + p.name + '</div>' +
+                    '<div class="list-item-subtitle">合同: ' + Utils.formatMoney(p.contractAmount) + ' | 利润: <span class="' + (profit && profit.profit >= 0 ? 'profit-positive' : 'profit-negative') + '">' + (profit ? Utils.formatMoney(profit.profit) : '¥0') + '</span></div>' +
+                    '<div style="margin-top:8px;"><div class="progress-bar" style="width:100%;"><div class="progress-fill" style="width:' + (p.progress||0) + '%;"></div></div>' +
+                    '<div style="font-size:11px;color:#999;margin-top:4px;">回款: ' + Utils.formatMoney(totalPaid) + ' / ' + Utils.formatMoney(p.contractAmount||0) + '</div></div>' +
+                    '</div><span class="tag ' + Utils.getStatusTag(p.status) + '">' + p.status + '</span></a>';
             }).join('');
         }
 
-        // 绑定筛选
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -112,37 +159,19 @@
             });
         });
 
-        // 绑定搜索
         document.getElementById('search-input').addEventListener('input', Utils.debounce(function(e) {
             searchKeyword = e.target.value;
             loadProjects();
         }, 300));
 
-        // 初始化
+        // 初始加载时先显示本地数据
         loadProjects();
     </script>
 
     <style>
-        .filter-btn {
-            padding: 6px 14px;
-            border: 1px solid #e8e8e8;
-            border-radius: 16px;
-            background: #fff;
-            font-size: 13px;
-            color: #666;
-            white-space: nowrap;
-            cursor: pointer;
-        }
-        .filter-btn.active {
-            background: #1890ff;
-            color: #fff;
-            border-color: #1890ff;
-        }
-        .list-item {
-            display: block;
-            text-decoration: none;
-            color: inherit;
-        }
+        .filter-btn { padding: 6px 14px; border: 1px solid #e8e8e8; border-radius: 16px; background: #fff; font-size: 13px; color: #666; white-space: nowrap; cursor: pointer; }
+        .filter-btn.active { background: #1890ff; color: #fff; border-color: #1890ff; }
+        .list-item { display: block; text-decoration: none; color: inherit; }
     </style>
 </body>
 </html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>登录 - 工程项目管理</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .login-box {
+            background: white;
+            border-radius: 16px;
+            padding: 32px 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .login-title {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .login-title h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .login-title p {
+            color: #999;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .btn-login:active {
+            opacity: 0.9;
+        }
+        .switch-mode {
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .error-msg {
+            color: #ff4d4f;
+            font-size: 13px;
+            margin-top: 4px;
+            display: none;
+        }
+        .company-field {
+            display: none;
+        }
+        .company-field.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-title">
+                <h1>工程项目管理</h1>
+                <p id="mode-text">请登录您的账号</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="form-group company-field" id="company-group">
+                    <label>公司名称</label>
+                    <input type="text" id="company" placeholder="请输入公司名称" maxlength="50">
+                    <div class="error-msg" id="company-error">请输入公司名称</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名" maxlength="20" autocomplete="username">
+                    <div class="error-msg" id="username-error">请输入用户名</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="password" placeholder="请输入密码" maxlength="20" autocomplete="current-password">
+                    <div class="error-msg" id="password-error">请输入密码</div>
+                </div>
+                
+                <button type="submit" class="btn-login" id="submit-btn">登录</button>
+            </form>
+            
+            <div class="switch-mode" id="switch-btn">还没有账号？立即注册</div>
+        </div>
+    </div>
+
+    <script>
+        var CLOUD_URL = 'https://azspvriaxhlllgtphwgv.supabase.co';
+        var CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3B2cmlheGhsbGxndHBod2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTM1OTMsImV4cCI6MjA5MDQyOTU5M30.6F3W6dYQ8DdtWRFBGBIejcms2XCvdMxWBvmOX_AMlAc';
+        var hdrs = { 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Content-Type': 'application/json' };
+        
+        // 检查是否已登录
+        var user = localStorage.getItem('pm_user');
+        if (user) {
+            window.location.href = '../index.html';
+        }
+        
+        var isLoginMode = true;
+        var switchBtn = document.getElementById('switch-btn');
+        var submitBtn = document.getElementById('submit-btn');
+        var modeText = document.getElementById('mode-text');
+        var companyGroup = document.getElementById('company-group');
+        
+        switchBtn.addEventListener('click', function() {
+            isLoginMode = !isLoginMode;
+            if (isLoginMode) {
+                modeText.textContent = '请登录您的账号';
+                submitBtn.textContent = '登录';
+                switchBtn.textContent = '还没有账号？立即注册';
+                companyGroup.classList.remove('show');
+            } else {
+                modeText.textContent = '注册新账号';
+                submitBtn.textContent = '注册';
+                switchBtn.textContent = '已有账号？立即登录';
+                companyGroup.classList.add('show');
+            }
+            clearErrors();
+        });
+        
+        function showError(id, show) {
+            document.getElementById(id + '-error').style.display = show ? 'block' : 'none';
+        }
+        
+        function clearErrors() {
+            showError('company', false);
+            showError('username', false);
+            showError('password', false);
+        }
+        
+        // 简单哈希
+        function hashPassword(pwd) {
+            var hash = 0;
+            for (var i = 0; i < pwd.length; i++) {
+                var char = pwd.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return 'pm_' + Math.abs(hash).toString(16);
+        }
+        
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearErrors();
+            
+            var company = document.getElementById('company').value.trim();
+            var username = document.getElementById('username').value.trim();
+            var password = document.getElementById('password').value;
+            
+            var hasError = false;
+            if (!username) { showError('username', true); hasError = true; }
+            if (!password) { showError('password', true); hasError = true; }
+            if (!isLoginMode && !company) { showError('company', true); hasError = true; }
+            if (hasError) return;
+            
+            var pwdHash = hashPassword(password);
+            
+            if (isLoginMode) {
+                // 登录
+                fetch(CLOUD_URL + '/rest/v1/users?username=eq.' + encodeURIComponent(username) + '&select=*', { headers: hdrs })
+                    .then(function(r) { return r.json(); })
+                    .then(function(users) {
+                        if (users.length === 0) {
+                            alert('用户名或密码错误');
+                            return;
+                        }
+                        var u = users[0];
+                        if (u.password_hash !== pwdHash) {
+                            alert('用户名或密码错误');
+                            return;
+                        }
+                        // 获取公司信息
+                        return fetch(CLOUD_URL + '/rest/v1/companies?id=eq.' + u.company_id + '&select=*', { headers: hdrs })
+                            .then(function(r) { return r.json(); })
+                            .then(function(companies) {
+                                var userData = {
+                                    id: u.id,
+                                    username: u.username,
+                                    role: u.role,
+                                    companyId: u.company_id,
+                                    companyName: companies.length > 0 ? companies[0].name : ''
+                                };
+                                localStorage.setItem('pm_user', JSON.stringify(userData));
+                                window.location.href = '../index.html';
+                            });
+                    })
+                    .catch(function(e) {
+                        alert('登录失败: ' + e.message);
+                    });
+            } else {
+                // 注册
+                fetch(CLOUD_URL + '/rest/v1/users?username=eq.' + encodeURIComponent(username) + '&select=id', { headers: hdrs })
+                    .then(function(r) { return r.json(); })
+                    .then(function(existing) {
+                        if (existing.length > 0) {
+                            alert('用户名已被使用');
+                            return;
+                        }
+                        // 创建公司
+                        return fetch(CLOUD_URL + '/rest/v1/companies', {
+                            method: 'POST',
+                            headers: hdrs,
+                            body: JSON.stringify({ name: company })
+                        });
+                    })
+                    .then(function(r) { 
+                        if (!r) return null;
+                        return r.json(); 
+                    })
+                    .then(function(newCompany) {
+                        if (!newCompany || newCompany.length === 0) return null;
+                        // 创建用户
+                        return fetch(CLOUD_URL + '/rest/v1/users', {
+                            method: 'POST',
+                            headers: hdrs,
+                            body: JSON.stringify({
+                                username: username,
+                                password_hash: pwdHash,
+                                company_id: newCompany[0].id,
+                                role: 'user'
+                            })
+                        });
+                    })
+                    .then(function(r) {
+                        if (!r) return null;
+                        return r.json();
+                    })
+                    .then(function(newUser) {
+                        if (!newUser) return;
+                        alert('注册成功，请登录');
+                        switchBtn.click();
+                    })
+                    .catch(function(e) {
+                        alert('注册失败: ' + e.message);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>

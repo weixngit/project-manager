@@ -212,9 +212,9 @@ const PaymentStore = {
         return Storage.delete(Storage.KEYS.PAYMENTS, id);
     },
 
-    // 获取待收款项
+    // 获取待收款项（根据实际回款日期判断）
     getPending() {
-        return this.getAll().filter(p => p.status === '待收款');
+        return this.getAll().filter(p => !p.actualDate || p.actualDate.trim() === '');
     },
 
     // 获取即将到期的回款（7天内）
@@ -242,19 +242,19 @@ const PaymentStore = {
         });
     },
 
-    // 获取项目已回款总额
+    // 获取项目已回款总额（根据实际回款日期判断）
     getTotalPaid(projectId) {
         const payments = this.getByProjectId(projectId);
         return payments
-            .filter(p => p.status === '已收款')
+            .filter(p => p.actualDate && p.actualDate.trim() !== '')
             .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
     },
 
-    // 获取项目待回款总额
+    // 获取项目待回款总额（根据实际回款日期判断）
     getTotalPending(projectId) {
         const payments = this.getByProjectId(projectId);
         return payments
-            .filter(p => p.status === '待收款')
+            .filter(p => !p.actualDate || p.actualDate.trim() === '')
             .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
     }
 };

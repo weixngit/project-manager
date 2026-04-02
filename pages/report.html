@@ -8,50 +8,60 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- 页面头部 -->
         <div class="page-header">
             <a href="../index.html" class="back-btn">←</a>
             <h2 class="page-title">盈亏报表</h2>
         </div>
 
-        <!-- 汇总统计 -->
-        <div style="padding: 16px; background: linear-gradient(135deg, #1890ff, #40a9ff); color: #fff;">
-            <div style="text-align: center;">
-                <div style="font-size: 14px; opacity: 0.9;">总利润</div>
-                <div class="amount" style="font-size: 36px; font-weight: 700;" id="total-profit">¥0</div>
+        <div style="padding:16px;background:linear-gradient(135deg,#1890ff,#40a9ff);color:#fff;">
+            <div style="text-align:center;">
+                <div style="font-size:14px;opacity:0.9;">总利润</div>
+                <div class="amount" style="font-size:36px;font-weight:700;" id="total-profit">¥0</div>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px;">
-                <div style="text-align: center;">
-                    <div style="font-size: 12px; opacity: 0.9;">合同总额</div>
-                    <div style="font-size: 18px; font-weight: 600;" id="total-contract">¥0</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 12px; opacity: 0.9;">总成本</div>
-                    <div style="font-size: 18px; font-weight: 600;" id="total-cost">¥0</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 12px; opacity: 0.9;">项目数</div>
-                    <div style="font-size: 18px; font-weight: 600;" id="total-projects">0</div>
-                </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;">
+                <div style="text-align:center;"><div style="font-size:12px;opacity:0.9;">合同总额</div><div style="font-size:18px;font-weight:600;" id="total-contract">¥0</div></div>
+                <div style="text-align:center;"><div style="font-size:12px;opacity:0.9;">总成本</div><div style="font-size:18px;font-weight:600;" id="total-cost">¥0</div></div>
+                <div style="text-align:center;"><div style="font-size:12px;opacity:0.9;">项目数</div><div style="font-size:18px;font-weight:600;" id="total-projects">0</div></div>
             </div>
         </div>
 
-        <!-- 项目列表 -->
         <div class="main-content">
-            <h3 style="font-size: 16px; margin-bottom: 12px;">各项目盈亏</h3>
-            <div id="report-list"></div>
+            <h3 style="font-size:16px;margin-bottom:12px;">各项目盈亏</h3>
+            <div id="report-list"><div class="empty-tip">加载中...</div></div>
         </div>
     </div>
 
     <script src="../js/storage.js"></script>
-    <script src="../js/cloudStorage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
+        // 检查登录
+        var userStr = localStorage.getItem('pm_user');
+        if (!userStr) { window.location.href = 'login.html'; }
+        var currentUser = JSON.parse(userStr);
+        
+        const CLOUD = { url: 'https://azspvriaxhlllgtphwgv.supabase.co', key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3B2cmlheGhsbGxndHBod2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTM1OTMsImV4cCI6MjA5MDQyOTU5M30.6F3W6dYQ8DdtWRFBGBIejcms2XCvdMxWBvmOX_AMlAc' };
+        const hdrs = { 'apikey': CLOUD.key, 'Authorization': 'Bearer ' + CLOUD.key };
+
+        async function syncFromCloud() {
+            try {
+                const rp = await fetch(CLOUD.url + '/rest/v1/projects?company_id=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs });
+                const projects = await rp.json();
+                if (projects && projects.length > 0) Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({ id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' })));
+                
+                const rc = await fetch(CLOUD.url + '/rest/v1/costs?company_id=eq.' + currentUser.companyId + '&order=created_at.desc', { headers: hdrs });
+                const costs = await rc.json();
+                if (costs && costs.length > 0) Storage.set(Storage.KEYS.COSTS, costs.map(c => ({ id: c.id, projectId: c.project_id, type: c.type, amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.created_at||'' })));
+                
+                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?company_id=eq.' + currentUser.companyId + '&order=expected_date.desc', { headers: hdrs });
+                const payments = await rpay.json();
+                if (payments && payments.length > 0) Storage.set(Storage.KEYS.PAYMENTS, payments.map(p => ({ id: p.id, projectId: p.project_id, amount: p.amount, type: p.type||'final', expectedDate: p.expected_date||'', actualDate: (p.actual_date && p.actual_date !== 'null') ? p.actual_date : '', remark: p.remark||'', createdAt: p.created_at||'' })));
+            } catch(e) { console.error('同步失败', e); }
+        }
+
         function loadReport() {
             const projects = ProjectStore.getAll();
-            let totalContract = 0;
-            let totalCost = 0;
-            let totalProfit = 0;
+            let totalContract = 0, totalCost = 0, totalProfit = 0;
+            const fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
 
             projects.forEach(p => {
                 const profit = Utils.calculateProfit(p.id);
@@ -62,13 +72,13 @@
                 }
             });
 
-            document.getElementById('total-contract').textContent = Utils.formatMoney(totalContract);
-            document.getElementById('total-cost').textContent = Utils.formatMoney(totalCost);
-            document.getElementById('total-profit').textContent = Utils.formatMoney(totalProfit);
+            document.getElementById('total-profit').textContent = totalProfit >= 0 ? '¥' + totalProfit.toLocaleString('zh-CN', fmt) : '(¥' + Math.abs(totalProfit).toLocaleString('zh-CN', fmt) + ')';
+            document.getElementById('total-profit').style.color = totalProfit < 0 ? '#ff4d4f' : '#fff';
+            document.getElementById('total-contract').textContent = '¥' + totalContract.toLocaleString('zh-CN', fmt);
+            document.getElementById('total-cost').textContent = '¥' + totalCost.toLocaleString('zh-CN', fmt);
             document.getElementById('total-projects').textContent = projects.length;
 
             const container = document.getElementById('report-list');
-
             if (projects.length === 0) {
                 container.innerHTML = '<div class="empty-tip">暂无项目数据</div>';
                 return;
@@ -76,44 +86,19 @@
 
             container.innerHTML = projects.map(p => {
                 const profit = Utils.calculateProfit(p.id);
-                const profitValue = profit ? profit.profit : 0;
-                const profitRate = profit ? profit.profitRate : 0;
-                const profitClass = profitValue >= 0 ? 'profit-positive' : 'profit-negative';
-                const totalPaid = PaymentStore.getTotalPaid(p.id);
-
-                return `
-                    <a href="project-detail.html?id=${p.id}" class="card" style="text-decoration: none; color: inherit;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div style="font-size: 15px; font-weight: 600;">${p.name}</div>
-                                <div style="font-size: 12px; color: #999; margin-top: 4px;">
-                                    合同: ${Utils.formatMoney(p.contractAmount)} | 回款: ${Utils.formatMoney(totalPaid)}
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div class="amount ${profitClass}" style="font-size: 18px;">
-                                    ${Utils.formatMoney(profitValue)}
-                                </div>
-                                <div style="font-size: 12px; color: #999;">
-                                    利润率: ${profitRate}%
-                                </div>
-                            </div>
-                        </div>
-                        <div style="margin-top: 12px;">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${p.progress || 0}%;"></div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #999; margin-top: 4px;">
-                                <span>进度: ${p.progress || 0}%</span>
-                                <span class="tag ${Utils.getStatusTag(p.status)}">${p.status}</span>
-                            </div>
-                        </div>
-                    </a>
-                `;
+                const isProfit = profit && profit.profit >= 0;
+                return '<div class="card" style="margin-bottom:8px;">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+                    '<span style="font-weight:500;">' + p.name + '</span>' +
+                    '<span class="tag ' + Utils.getStatusTag(p.status) + '">' + p.status + '</span></div>' +
+                    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:13px;">' +
+                    '<div><div style="color:#999;">合同</div><div>¥' + (p.contractAmount||0).toLocaleString('zh-CN', fmt) + '</div></div>' +
+                    '<div><div style="color:#999;">成本</div><div style="color:#ff4d4f;">¥' + (profit ? profit.totalCost.toLocaleString('zh-CN', fmt) : '0.00') + '</div></div>' +
+                    '<div><div style="color:#999;">利润</div><div style="color:' + (isProfit?'#52c41a':'#ff4d4f') + ';font-weight:600;">' + (profit ? (isProfit ? '+' : '-') + '¥' + Math.abs(profit.profit).toLocaleString('zh-CN', fmt) : '¥0.00') + '</div></div></div></div>';
             }).join('');
         }
 
-        loadReport();
+        syncFromCloud().then(() => loadReport());
     </script>
 </body>
 </html>

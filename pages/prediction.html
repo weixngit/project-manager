@@ -77,6 +77,10 @@
     <script src="../js/storage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
+        // 检查登录
+        var userStr = localStorage.getItem('pm_user');
+        if (!userStr) { window.location.href = 'login.html'; }
+        
         // 表单提交
         document.getElementById('prediction-form').addEventListener('submit', function(e) {
             e.preventDefault();

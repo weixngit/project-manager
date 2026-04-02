@@ -5,216 +5,452 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>成本记录 - 工程项目管理</title>
     <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            z-index: 1000;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-box {
+            background: #fff;
+            width: 100%;
+            max-height: 85vh;
+            border-radius: 16px 16px 0 0;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .modal-handle {
+            width: 40px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            margin: 0 auto 16px;
+        }
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .type-btn {
+            padding: 14px 8px;
+            border: 1px solid #e8e8e8;
+            border-radius: 10px;
+            background: #fff;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .type-btn:active {
+            background: #1890ff;
+            color: #fff;
+            border-color: #1890ff;
+        }
+        .type-btn .icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .amount-input {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            padding: 16px;
+            border: 2px solid #1890ff;
+            border-radius: 12px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: #1890ff;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+        .save-btn:active {
+            background: #40a9ff;
+        }
+        .cancel-btn {
+            width: 100%;
+            padding: 14px;
+            background: #fff;
+            color: #666;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 15px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .cancel-btn:active {
+            background: #f5f5f5;
+        }
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .cost-item:active {
+            background: #f5f5f5;
+        }
+        .cost-left {
+            flex: 1;
+        }
+        .cost-type {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .cost-date {
+            font-size: 12px;
+            color: #999;
+        }
+        .cost-remark {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        .cost-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ff4d4f;
+            margin-right: 12px;
+        }
+        .cost-delete {
+            color: #999;
+            font-size: 20px;
+            padding: 4px 8px;
+        }
+        .cost-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #fff5f5;
+            border-top: 2px solid #ff4d4f;
+            font-weight: bold;
+        }
+        .cost-total-label {
+            font-size: 14px;
+            color: #333;
+        }
+        .cost-total-amount {
+            font-size: 18px;
+            color: #ff4d4f;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: #fff;
+        }
+        .page-btn {
+            padding: 8px 16px;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 13px;
+        }
+        .page-btn:disabled {
+            color: #ccc;
+        }
+        .page-info {
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- 页面头部 -->
         <div class="page-header">
             <a href="../index.html" class="back-btn">←</a>
             <h2 class="page-title">成本记录</h2>
         </div>
 
-        <!-- 项目选择 -->
-        <div style="padding: 12px 16px; background: #fff;">
-            <select class="form-select" id="project-select">
+        <div style="padding: 16px 16px 8px; background: #fff;">
+            <button id="add-btn" style="display: none; width: 100%; padding: 12px; background: #1890ff; color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: bold;">+ 添加成本记录</button>
+        </div>
+
+        <div style="padding: 0 16px 12px; background: #fff;">
+            <select id="project-select" class="form-input" style="margin: 0;">
                 <option value="">选择项目...</option>
             </select>
         </div>
 
-        <!-- 成本统计 -->
-        <div id="cost-stats" style="padding: 16px; background: #fff; margin-bottom: 8px; display: none;">
-            <h3 style="font-size: 14px; margin-bottom: 12px;">成本统计</h3>
-            <div id="stats-content"></div>
-        </div>
-
-        <!-- 成本列表 -->
-        <div class="main-content" style="padding-top: 8px;">
+        <div class="main-content" style="padding-top: 0;">
             <div id="cost-list"></div>
         </div>
-
-        <!-- 添加按钮 -->
-        <button class="fab" id="add-btn" style="display: none;">+</button>
     </div>
 
-    <!-- 添加成本弹窗 -->
-    <div id="add-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center;">
-        <div style="background: #fff; width: 100%; max-width: 480px; border-radius: 16px 16px 0 0; padding: 20px;">
-            <h3 style="margin-bottom: 16px;">记录成本</h3>
-            <form id="cost-form">
-                <div class="form-group">
-                    <label class="form-label">成本类型 *</label>
-                    <select class="form-select" id="cost-type" required>
-                        <option value="">选择类型</option>
-                        ${COST_TYPES.map(t => `<option value="${t.value}">${t.icon} ${t.label}</option>`).join('')}
-                    </select>
+    <!-- 新增成本弹窗 -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal-box">
+            <div class="modal-handle"></div>
+            <h3 style="text-align:center;margin-bottom:16px;">添加成本</h3>
+            
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px;color:#666;margin-bottom:8px;display:block;">成本类型</label>
+                <div class="type-grid" id="type-grid">
+                    <button class="type-btn" data-type="labor">
+                        <span class="icon">👷</span>
+                        人工分包
+                    </button>
+                    <button class="type-btn" data-type="material">
+                        <span class="icon">📦</span>
+                        材料费
+                    </button>
+                    <button class="type-btn" data-type="business">
+                        <span class="icon">🤝</span>
+                        商务费
+                    </button>
+                    <button class="type-btn" data-type="machinery">
+                        <span class="icon">🚜</span>
+                        机械租赁
+                    </button>
+                    <button class="type-btn" data-type="transport">
+                        <span class="icon">🚗</span>
+                        交通费
+                    </button>
+                    <button class="type-btn" data-type="other">
+                        <span class="icon">📋</span>
+                        杂费
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">金额（元）*</label>
-                    <input type="number" class="form-input" id="cost-amount" placeholder="输入金额" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">日期</label>
-                    <input type="date" class="form-input" id="cost-date">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">说明</label>
-                    <input type="text" class="form-input" id="cost-remark" placeholder="简要说明">
-                </div>
-                <div style="display: flex; gap: 12px; margin-top: 16px;">
-                    <button type="button" class="btn btn-block" style="background: #f5f5f5; color: #666;" onclick="closeModal()">取消</button>
-                    <button type="submit" class="btn btn-primary btn-block">保存</button>
-                </div>
-            </form>
+                <div id="selected-type" style="text-align:center;color:#1890ff;font-size:14px;margin-top:8px;">请选择类型</div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px;color:#666;margin-bottom:8px;display:block;">金额（元）</label>
+                <input type="number" id="cost-amount" class="amount-input" placeholder="0.00" step="0.01">
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px;color:#666;margin-bottom:8px;display:block;">日期</label>
+                <input type="date" id="cost-date" class="form-input" style="font-size:16px;padding:12px;">
+            </div>
+
+            <div style="margin-bottom:16px;">
+                <label style="font-size:12px;color:#666;margin-bottom:8px;display:block;">备注（选填）</label>
+                <input type="text" id="cost-remark" class="form-input" placeholder="输入备注" style="font-size:16px;padding:12px;">
+            </div>
+
+            <button class="save-btn" id="save-btn">保存</button>
+            <button class="cancel-btn" id="cancel-btn">取消</button>
         </div>
     </div>
 
     <script src="../js/storage.js"></script>
-    <script src="../js/cloudStorage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
-        let currentProjectId = '';
+        // 检查登录
+        var userStr = localStorage.getItem('pm_user');
+        if (!userStr) {
+            window.location.href = 'login.html';
+        }
+        var currentUser = JSON.parse(userStr);
+        
+        var CLOUD_URL = 'https://azspvriaxhlllgtphwgv.supabase.co';
+        var CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3B2cmlheGhsbGxndHBod2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTM1OTMsImV4cCI6MjA5MDQyOTU5M30.6F3W6dYQ8DdtWRFBGBIejcms2XCvdMxWBvmOX_AMlAc';
+        var hdrs = { 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY };
+        
+        var currentProjectId = '';
+        var selectedType = '';
+        var currentPage = 1;
+        var pageSize = 10;
 
-        // 加载项目列表
-        function loadProjects() {
-            const projects = ProjectStore.getAll();
-            const select = document.getElementById('project-select');
-            
-            // 检查URL参数
-            const params = Utils.getUrlParams();
-            if (params.projectId) {
-                currentProjectId = params.projectId;
-            }
-
-            select.innerHTML = '<option value="">选择项目...</option>' + 
-                projects.map(p => `<option value="${p.id}" ${p.id === currentProjectId ? 'selected' : ''}>${p.name}</option>`).join('');
-
-            if (currentProjectId) {
-                loadCosts();
-            }
+        function syncFromCloud() {
+            fetch(CLOUD_URL + '/rest/v1/projects?company_id=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs })
+                .then(function(r) { return r.json(); })
+                .then(function(cloudProjects) {
+                    if (cloudProjects && cloudProjects.length > 0) {
+                        Storage.set(Storage.KEYS.PROJECTS, cloudProjects.map(function(p) {
+                            return { id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' };
+                        }));
+                    }
+                    return fetch(CLOUD_URL + '/rest/v1/costs?company_id=eq.' + currentUser.companyId + '&order=date.desc', { headers: hdrs });
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(cloudCosts) {
+                    if (cloudCosts && cloudCosts.length > 0) {
+                        Storage.set(Storage.KEYS.COSTS, cloudCosts.map(function(c) {
+                            return { id: c.id, projectId: c.project_id, type: c.type, amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.created_at||'' };
+                        }));
+                    }
+                    loadProjects();
+                })
+                .catch(function(e) { loadProjects(); });
         }
 
-        // 选择项目
-        document.getElementById('project-select').addEventListener('change', function() {
-            currentProjectId = this.value;
-            loadCosts();
-        });
+        function loadProjects() {
+            var projects = ProjectStore.getAll();
+            var select = document.getElementById('project-select');
+            var params = Utils.getUrlParams();
+            if (params.projectId) currentProjectId = params.projectId;
+            select.innerHTML = '<option value="">选择项目...</option>' + projects.map(function(p) { return '<option value="' + p.id + '"' + (p.id === currentProjectId ? ' selected' : '') + '>' + p.name + '</option>'; }).join('');
+            if (currentProjectId) { currentPage = 1; loadCosts(); }
+        }
 
-        // 加载成本列表
         function loadCosts() {
-            const container = document.getElementById('cost-list');
-            const statsArea = document.getElementById('cost-stats');
-            const addBtn = document.getElementById('add-btn');
-
+            var container = document.getElementById('cost-list');
+            var addBtn = document.getElementById('add-btn');
+            
             if (!currentProjectId) {
-                container.innerHTML = '<div class="empty-tip">请先选择项目</div>';
-                statsArea.style.display = 'none';
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;">请先选择项目</div>';
                 addBtn.style.display = 'none';
                 return;
             }
 
-            addBtn.style.display = 'flex';
-            const costs = CostStore.getByProjectId(currentProjectId);
-            const stats = CostStore.getStatsByType(currentProjectId);
+            var allCosts = CostStore.getByProjectId(currentProjectId);
+            var totalCost = CostStore.getTotalCost(currentProjectId);
+            var totalPages = Math.max(1, Math.ceil(allCosts.length / pageSize));
+            if (currentPage > totalPages) currentPage = totalPages;
+            
+            var start = (currentPage - 1) * pageSize;
+            var pageCosts = allCosts.slice(start, start + pageSize);
 
-            // 渲染统计
-            statsArea.style.display = 'block';
-            const totalCost = Object.values(stats).reduce((a, b) => a + b, 0);
-            document.getElementById('stats-content').innerHTML = `
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-                    ${Object.entries(stats).map(([type, amount]) => {
-                        const typeInfo = COST_TYPES.find(t => t.value === type);
-                        return `
-                            <div style="text-align: center; padding: 8px; background: #f5f5f5; border-radius: 8px;">
-                                <div style="font-size: 20px;">${typeInfo ? typeInfo.icon : '📋'}</div>
-                                <div style="font-size: 11px; color: #999;">${typeInfo ? typeInfo.label : type}</div>
-                                <div style="font-size: 14px; font-weight: 600;">${Utils.formatMoney(amount)}</div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e8e8e8; text-align: center;">
-                    <span style="font-size: 14px; color: #666;">总成本：</span>
-                    <span style="font-size: 18px; font-weight: 700; color: #ff4d4f;">${Utils.formatMoney(totalCost)}</span>
-                </div>
-            `;
-
-            // 渲染列表
-            if (costs.length === 0) {
-                container.innerHTML = '<div class="empty-tip">暂无成本记录</div>';
+            if (allCosts.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p style="font-size:48px;margin-bottom:12px;">📝</p><p>暂无成本记录</p><p style="font-size:12px;margin-top:8px;">点击右下角 + 添加</p></div>';
+                addBtn.style.display = 'block';
                 return;
             }
 
-            container.innerHTML = costs.sort((a, b) => new Date(b.date) - new Date(a.date)).map(c => {
-                const typeInfo = COST_TYPES.find(t => t.value === c.type);
-                return `
-                    <div class="list-item">
-                        <div class="list-item-content">
-                            <div class="list-item-title">${typeInfo ? typeInfo.icon : '📋'} ${typeInfo ? typeInfo.label : c.type}</div>
-                            <div class="list-item-subtitle">${Utils.formatDate(c.date, 'full')} ${c.remark ? '· ' + c.remark : ''}</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 16px; font-weight: 600; color: #ff4d4f;">-${Utils.formatMoney(c.amount)}</div>
-                            <button onclick="deleteCost('${c.id}')" style="font-size: 11px; color: #999; background: none; border: none; padding: 4px 0; cursor: pointer;">删除</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            addBtn.style.display = 'block';
+            
+            var typeLabels = { labor: '人工分包', material: '设备材料', business: '商务费', machinery: '机械租赁', transport: '交通费', other: '杂费' };
+            var typeIcons = { labor: '👷', material: '📦', business: '🤝', machinery: '🚜', transport: '🚗', other: '📋' };
+
+            var html = '';
+            
+            // 成本列表
+            pageCosts.forEach(function(c) {
+                html += '<div class="cost-item">' +
+                    '<div class="cost-left">' +
+                        '<div class="cost-type">' + (typeIcons[c.type]||'📋') + ' ' + (typeLabels[c.type]||c.type) + '</div>' +
+                        '<div class="cost-date">' + c.date + '</div>' +
+                        (c.remark ? '<div class="cost-remark">' + c.remark + '</div>' : '') +
+                    '</div>' +
+                    '<div class="cost-amount">¥' + parseFloat(c.amount).toLocaleString() + '</div>' +
+                    '<div class="cost-delete" onclick="deleteCost(\'' + c.id + '\')">×</div>' +
+                '</div>';
+            });
+            
+            // 分页
+            if (totalPages > 1) {
+                html += '<div class="pagination">' +
+                    '<button class="page-btn" onclick="prevPage()" ' + (currentPage <= 1 ? 'disabled' : '') + '>上一页</button>' +
+                    '<span class="page-info">' + currentPage + ' / ' + totalPages + '</span>' +
+                    '<button class="page-btn" onclick="nextPage()" ' + (currentPage >= totalPages ? 'disabled' : '') + '>下一页</button>' +
+                '</div>';
+            }
+            
+            // 合计行
+            html += '<div class="cost-total">' +
+                '<span class="cost-total-label">合计 (' + allCosts.length + '条)</span>' +
+                '<span class="cost-total-amount">¥' + totalCost.toLocaleString() + '</span>' +
+            '</div>';
+            
+            container.innerHTML = html;
         }
 
-        // 打开弹窗
-        document.getElementById('add-btn').addEventListener('click', function() {
-            document.getElementById('add-modal').style.display = 'flex';
+        function prevPage() {
+            currentPage--;
+            loadCosts();
+        }
+
+        function nextPage() {
+            currentPage++;
+            loadCosts();
+        }
+
+        function showModal() {
+            selectedType = '';
+            document.getElementById('selected-type').textContent = '请选择类型';
+            document.getElementById('cost-amount').value = '';
             document.getElementById('cost-date').value = new Date().toISOString().split('T')[0];
-        });
-
-        // 关闭弹窗
-        function closeModal() {
-            document.getElementById('add-modal').style.display = 'none';
-            document.getElementById('cost-form').reset();
+            document.getElementById('cost-remark').value = '';
+            document.getElementById('add-modal').classList.add('show');
+            document.querySelectorAll('.type-btn').forEach(function(btn) { btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = ''; });
         }
 
-        // 点击背景关闭
-        document.getElementById('add-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
+        function hideModal() {
+            document.getElementById('add-modal').classList.remove('show');
+        }
+
+        document.querySelectorAll('.type-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                selectedType = this.dataset.type;
+                document.querySelectorAll('.type-btn').forEach(function(b) { b.style.background = ''; b.style.color = ''; b.style.borderColor = ''; });
+                this.style.background = '#1890ff';
+                this.style.color = '#fff';
+                this.style.borderColor = '#1890ff';
+                var labels = { labor: '人工分包', material: '设备材料', business: '商务费', machinery: '机械租赁', transport: '交通费', other: '杂费' };
+                document.getElementById('selected-type').textContent = '已选: ' + (labels[selectedType]||'');
+            });
         });
 
-        // 提交表单
-        document.getElementById('cost-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+        document.getElementById('add-btn').addEventListener('click', showModal);
+        document.getElementById('cancel-btn').addEventListener('click', hideModal);
+        document.getElementById('add-modal').addEventListener('click', function(e) { if (e.target === this) hideModal(); });
 
-            const data = {
-                projectId: currentProjectId,
-                type: document.getElementById('cost-type').value,
-                amount: document.getElementById('cost-amount').value,
-                date: document.getElementById('cost-date').value,
-                remark: document.getElementById('cost-remark').value
-            };
+        document.getElementById('save-btn').addEventListener('click', function() {
+            var amount = document.getElementById('cost-amount').value;
+            var date = document.getElementById('cost-date').value;
+            var remark = document.getElementById('cost-remark').value;
+            
+            if (!selectedType) { Utils.showToast('请选择成本类型'); return; }
+            if (!amount || parseFloat(amount) <= 0) { Utils.showToast('请输入金额'); return; }
+            if (!date) { Utils.showToast('请选择日期'); return; }
 
-            if (!data.type || !data.amount) {
-                Utils.showToast('请填写完整信息');
-                return;
-            }
+            var cost = CostStore.add({ projectId: currentProjectId, type: selectedType, amount: amount, date: date, remark: remark });
 
-            CostStore.add(data);
+            fetch(CLOUD_URL + '/rest/v1/costs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
+                body: JSON.stringify({ id: cost.id, project_id: cost.projectId, type: cost.type, amount: parseFloat(cost.amount) || 0, date: cost.date, remark: cost.remark || '', company_id: currentUser.companyId })
+            }).catch(function(e) {});
+
             Utils.showToast('记录成功');
-            closeModal();
+            hideModal();
             loadCosts();
         });
 
-        // 删除成本
-        async function deleteCost(id) {
-            const confirmed = await Utils.confirm('确定要删除这条记录吗？');
-            if (confirmed) {
+        function deleteCost(id) {
+            if (confirm('确定要删除这条记录吗？')) {
                 CostStore.delete(id);
+                fetch(CLOUD_URL + '/rest/v1/costs?id=eq.' + id, { method: 'DELETE', headers: hdrs }).catch(function(e) {});
                 Utils.showToast('已删除');
                 loadCosts();
             }
         }
 
-        // 初始化
-        loadProjects();
+        document.getElementById('project-select').addEventListener('change', function() {
+            currentProjectId = this.value;
+            currentPage = 1;
+            loadCosts();
+        });
+
+        syncFromCloud();
     </script>
 </body>
 </html>

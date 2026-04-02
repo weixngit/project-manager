@@ -8,15 +8,13 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- 顶部标题栏 -->
         <header class="header">
             <h1>工程项目管理</h1>
-            <span class="subtitle">小布丁为您服务 🍮</span>
+            <span class="subtitle" id="user-info">小布丁为您服务</span>
+            <span class="logout-btn" onclick="logout()" style="position:absolute;right:16px;top:16px;font-size:12px;color:rgba(255,255,255,0.8);cursor:pointer;">退出</span>
         </header>
 
-        <!-- 主要内容区 -->
         <main class="main-content">
-            <!-- 快捷统计卡片 -->
             <div class="stats-cards">
                 <div class="stat-card">
                     <div class="stat-value" id="total-projects">0</div>
@@ -32,7 +30,6 @@
                 </div>
             </div>
 
-            <!-- 功能入口 -->
             <div class="menu-grid">
                 <a href="pages/project-list.html" class="menu-item primary">
                     <span class="menu-icon">📋</span>
@@ -60,40 +57,180 @@
                 </a>
             </div>
 
-            <!-- 最近项目 -->
             <div class="recent-section">
                 <h3>最近项目</h3>
                 <div class="recent-list" id="recent-projects">
-                    <!-- 动态加载 -->
-                    <div class="empty-tip">暂无项目，点击"项目列表"新建</div>
+                    <div class="empty-tip">暂无项目</div>
                 </div>
             </div>
         </main>
 
-        <!-- 底部导航 -->
         <nav class="bottom-nav">
-            <a href="index.html" class="nav-item active">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-text">首页</span>
-            </a>
-            <a href="pages/project-list.html" class="nav-item">
-                <span class="nav-icon">📋</span>
-                <span class="nav-text">项目</span>
-            </a>
-            <a href="pages/payment.html" class="nav-item">
-                <span class="nav-icon">💰</span>
-                <span class="nav-text">回款</span>
-            </a>
-            <a href="pages/report.html" class="nav-item">
-                <span class="nav-icon">📊</span>
-                <span class="nav-text">报表</span>
-            </a>
+            <a href="index.html" class="nav-item active"><span class="nav-icon">🏠</span><span class="nav-text">首页</span></a>
+            <a href="pages/project-list.html" class="nav-item"><span class="nav-icon">📋</span><span class="nav-text">项目</span></a>
+            <a href="pages/payment.html" class="nav-item"><span class="nav-icon">💰</span><span class="nav-text">回款</span></a>
+            <a href="pages/report.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-text">报表</span></a>
         </nav>
     </div>
 
+    <div id="debug-info" style="position:fixed;bottom:60px;right:10px;background:#000;color:#0f0;padding:8px 12px;border-radius:8px;font-size:11px;font-family:monospace;z-index:9999;max-width:200px;opacity:0.8;"></div>
+
     <script src="js/storage.js"></script>
-    <script src="js/cloudStorage.js"></script>
     <script src="js/utils.js"></script>
+    <script>
+        var CLOUD_URL = 'https://azspvriaxhlllgtphwgv.supabase.co';
+        var CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3B2cmlheGhsbGxndHBod2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTM1OTMsImV4cCI6MjA5MDQyOTU5M30.6F3W6dYQ8DdtWRFBGBIejcms2XCvdMxWBvmOX_AMlAc';
+        
+        // 检查登录
+        var userStr = localStorage.getItem('pm_user');
+        if (!userStr) {
+            window.location.href = 'pages/login.html';
+        }
+        var currentUser = JSON.parse(userStr);
+        document.getElementById('user-info').textContent = currentUser.companyName + ' · ' + currentUser.username;
+        
+        function logout() {
+            localStorage.removeItem('pm_user');
+            window.location.href = 'pages/login.html';
+        }
+        
+        var hdrs = { 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY };
+        var debugEl = document.getElementById('debug-info');
+        
+        function log(msg) {
+            console.log(msg);
+            if (debugEl) debugEl.innerHTML = new Date().toLocaleTimeString() + '<br>' + msg;
+        }
+        
+        function syncFromCloud() {
+            log('sync...');
+            fetch(CLOUD_URL + '/rest/v1/projects?company_id=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs })
+                .then(function(r) { return r.json(); })
+                .then(function(cloudProjects) {
+                    log('proj: ' + (cloudProjects ? cloudProjects.length : 0));
+                    if (cloudProjects && cloudProjects.length > 0) {
+                        var localP = cloudProjects.map(function(p) {
+                            return {
+                                id: p.id,
+                                name: p.name,
+                                contractAmount: p.contract_amount,
+                                client: p.client || '',
+                                clientContact: p.client_contact || '',
+                                clientPhone: p.client_phone || '',
+                                clientAddress: p.client_address || '',
+                                manager: p.manager || '',
+                                managerPhone: p.manager_phone || '',
+                                startDate: p.start_date || '',
+                                endDate: p.end_date || '',
+                                status: p.status || '进行中',
+                                progress: p.progress || 0,
+                                invoiceType: p.invoice_type || '',
+                                taxAmount: p.tax_amount || 0,
+                                remark: p.remark || '',
+                                createdAt: p.created_at || '',
+                                updatedAt: p.updated_at || ''
+                            };
+                        });
+                        Storage.set(Storage.KEYS.PROJECTS, localP);
+                    }
+                    return fetch(CLOUD_URL + '/rest/v1/costs?company_id=eq.' + currentUser.companyId + '&order=created_at.desc', { headers: hdrs });
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(cloudCosts) {
+                    log('costs: ' + (cloudCosts ? cloudCosts.length : 0));
+                    if (cloudCosts && cloudCosts.length > 0) {
+                        var localC = cloudCosts.map(function(c) {
+                            return {
+                                id: c.id,
+                                projectId: c.project_id,
+                                type: c.type,
+                                amount: c.amount,
+                                date: c.date || '',
+                                remark: c.remark || '',
+                                createdAt: c.created_at || ''
+                            };
+                        });
+                        Storage.set(Storage.KEYS.COSTS, localC);
+                    }
+                    return fetch(CLOUD_URL + '/rest/v1/payments?company_id=eq.' + currentUser.companyId + '&order=expected_date.desc', { headers: hdrs });
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(cloudPayments) {
+                    log('pay: ' + (cloudPayments ? cloudPayments.length : 0));
+                    if (cloudPayments && cloudPayments.length > 0) {
+                        var localPay = cloudPayments.map(function(p) {
+                            return {
+                                id: p.id,
+                                projectId: p.project_id,
+                                amount: p.amount,
+                                type: p.type || 'final',
+                                expectedDate: p.expected_date || '',
+                                actualDate: (p.actual_date && p.actual_date !== 'null') ? p.actual_date : '',
+                                remark: p.remark || '',
+                                createdAt: p.created_at || ''
+                            };
+                        });
+                        Storage.set(Storage.KEYS.PAYMENTS, localPay);
+                    }
+                    initPage();
+                    log('done!');
+                    setTimeout(function() { if (debugEl) { debugEl.style.opacity = '0'; setTimeout(function() { if (debugEl) debugEl.remove(); }, 500); } }, 2000);
+                })
+                .catch(function(e) {
+                    log('err: ' + e.message);
+                    initPage();
+                });
+        }
+        
+        function initPage() {
+            var projects = Storage.get(Storage.KEYS.PROJECTS) || [];
+            var costs = Storage.get(Storage.KEYS.COSTS) || [];
+            var payments = Storage.get(Storage.KEYS.PAYMENTS) || [];
+            
+            // active projects
+            var activeProjects = projects.filter(function(p) { return p.status === '进行中'; });
+            document.getElementById('total-projects').textContent = activeProjects.length;
+            
+            // total profit
+            var totalProfit = 0;
+            projects.forEach(function(p) {
+                var projectCosts = costs.filter(function(c) { return c.projectId === p.id; });
+                var totalCost = projectCosts.reduce(function(s, c) { return s + (c.amount || 0); }, 0);
+                var profit = (p.contractAmount || 0) - totalCost - (p.taxAmount || 0);
+                totalProfit += profit;
+            });
+            var fmt = { minimumFractionDigits: 2, maximumFractionDigits: 2 };
+            var profitText = totalProfit >= 0 ? '¥' + totalProfit.toLocaleString('zh-CN', fmt) : '(¥' + Math.abs(totalProfit).toLocaleString('zh-CN', fmt) + ')';
+            document.getElementById('total-profit').textContent = profitText;
+            document.getElementById('total-profit').style.color = totalProfit < 0 ? '#ff4d4f' : '#52c41a';
+            
+            // payment alerts - 计算所有项目的待回款总额
+            var pendingTotal = 0;
+            projects.forEach(function(p) {
+                // 计算项目已收款
+                var paid = payments
+                    .filter(function(py) { return py.projectId === p.id && py.actualDate && py.actualDate !== ''; })
+                    .reduce(function(s, py) { return s + (parseFloat(py.amount) || 0); }, 0);
+                // 待回款 = 合同金额 - 已收款
+                var pending = (p.contractAmount || 0) - paid;
+                if (pending > 0) pendingTotal += pending;
+            });
+            document.getElementById('payment-alert').textContent = '¥' + Math.round(pendingTotal).toLocaleString();
+            
+            // recent projects
+            var recentDiv = document.getElementById('recent-projects');
+            if (projects.length === 0) {
+                recentDiv.innerHTML = '<div class="empty-tip">暂无项目，点击"项目列表"新建</div>';
+            } else {
+                var recent = projects.sort(function(a, b) { return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0); }).slice(0, 5);
+                recentDiv.innerHTML = recent.map(function(p) {
+                    return '<a href="pages/project-detail.html?id=' + p.id + '" class="recent-item"><div><div class="project-name">' + p.name + '</div><div class="project-info">合同: ¥' + (p.contractAmount || 0).toLocaleString() + '</div></div><span class="project-status tag">' + p.status + '</span></a>';
+                }).join('');
+            }
+        }
+        
+        syncFromCloud();
+    </script>
     <script src="js/app.js"></script>
 </body>
 </html>

@@ -88,7 +88,7 @@ const App = {
     }
 };
 
-// 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', () => {
-    App.init();
-});
+// 不在这里自动初始化，等云端同步完成后在 index.html 里手动调用
+// document.addEventListener('DOMContentLoaded', () => {
+//     App.init();
+// });

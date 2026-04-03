@@ -254,9 +254,10 @@
                 return;
             }
             
+            var newId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8); return v.toString(16); });
             fetch(CLOUD_URL + '/rest/v1/taxsettings', {
                 method: 'POST', headers: hdrs,
-                body: JSON.stringify({ type: 'tax_rate', rate: rate / 100, name: rate + '%' })
+                body: JSON.stringify({ id: newId, type: 'tax_rate', rate: rate / 100, name: rate + '%' })
             }).then(function(r) {
                 if (r.ok) { input.value = ''; loadTaxRates(); }
             });

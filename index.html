@@ -104,7 +104,7 @@
         
         function syncFromCloud() {
             log('sync...');
-            fetch(CLOUD_URL + '/rest/v1/projects?company_id=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs })
+            fetch(CLOUD_URL + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(cloudProjects) {
                     log('proj: ' + (cloudProjects ? cloudProjects.length : 0));
@@ -133,7 +133,7 @@
                         });
                         Storage.set(Storage.KEYS.PROJECTS, localP);
                     }
-                    return fetch(CLOUD_URL + '/rest/v1/costs?company_id=eq.' + currentUser.companyId + '&order=created_at.desc', { headers: hdrs });
+                    return fetch(CLOUD_URL + '/rest/v1/costs?companyid=eq.' + currentUser.companyId + '&order=created_at.desc', { headers: hdrs });
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(cloudCosts) {
@@ -152,7 +152,7 @@
                         });
                         Storage.set(Storage.KEYS.COSTS, localC);
                     }
-                    return fetch(CLOUD_URL + '/rest/v1/payments?company_id=eq.' + currentUser.companyId + '&order=expected_date.desc', { headers: hdrs });
+                    return fetch(CLOUD_URL + '/rest/v1/payments?companyid=eq.' + currentUser.companyId + '&order=expected_date.desc', { headers: hdrs });
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(cloudPayments) {

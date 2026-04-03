@@ -286,18 +286,18 @@ const InvoiceStore = {
     // 统计开票情况
     getInvoiceStats(projectId) {
         const invoices = this.getByProjectId(projectId);
-        let received = 0;  // 收到的发票金额
-        let issued = 0;    // 开出的发票金额
+        let inputAmount = 0, outputAmount = 0;
+        let inputPu = 0, inputZh = 0, outputPu = 0, outputZh = 0;
         
         invoices.forEach(i => {
-            if (i.type === '收到') {
-                received += parseFloat(i.amount) || 0;
-            } else {
-                issued += parseFloat(i.amount) || 0;
-            }
+            const amt = parseFloat(i.amount) || 0;
+            if (i.type === '收到普') { inputAmount += amt; inputPu += amt; }
+            else if (i.type === '收到专') { inputAmount += amt; inputZh += amt; }
+            else if (i.type === '开出普') { outputAmount += amt; outputPu += amt; }
+            else if (i.type === '开出专') { outputAmount += amt; outputZh += amt; }
         });
         
-        return { received, issued };
+        return { inputAmount, outputAmount, inputPu, inputZh, outputPu, outputZh };
     }
 };
 

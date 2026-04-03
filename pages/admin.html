@@ -253,8 +253,8 @@
                     var companyIds = companies.map(function(c) { return c.id; });
                     return Promise.all([
                         companies,
-                        fetch(CLOUD_URL + '/rest/v1/users?select=company_id&company_id=in.(' + companyIds.join(',') + ')', { headers: hdrs }).then(function(r) { return r.json(); }),
-                        fetch(CLOUD_URL + '/rest/v1/projects?select=company_id&company_id=in.(' + companyIds.join(',') + ')', { headers: hdrs }).then(function(r) { return r.json(); })
+                        fetch(CLOUD_URL + '/rest/v1/users?select=companyid&companyid=in.(' + companyIds.join(',') + ')', { headers: hdrs }).then(function(r) { return r.json(); }),
+                        fetch(CLOUD_URL + '/rest/v1/projects?select=companyid&companyid=in.(' + companyIds.join(',') + ')', { headers: hdrs }).then(function(r) { return r.json(); })
                     ]);
                 })
                 .then(function(results) {
@@ -269,8 +269,8 @@
                         return;
                     }
                     tbody.innerHTML = companies.map(function(c) {
-                        var userCount = users.filter(function(u) { return u.company_id === c.id; }).length;
-                        var projCount = projects.filter(function(p) { return p.company_id === c.id; }).length;
+                        var userCount = users.filter(function(u) { return u.companyid === c.id; }).length;
+                        var projCount = projects.filter(function(p) { return p.companyid === c.id; }).length;
                         return '<tr><td>' + c.name + '</td><td>' + new Date(c.created_at).toLocaleDateString() + '</td><td>' + userCount + '</td><td>' + projCount + '</td><td><button class="btn-small btn-danger" onclick="deleteCompany(\'' + c.id + '\')">删除</button></td></tr>';
                     }).join('');
                 });

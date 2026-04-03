@@ -251,7 +251,7 @@
                 .then(function(cloudProjects) {
                     if (cloudProjects && cloudProjects.length > 0) {
                         Storage.set(Storage.KEYS.PROJECTS, cloudProjects.map(function(p) {
-                            return { id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' };
+                            return { id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxRate: p.tax_rate||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' };
                         }));
                     }
                     return fetch(CLOUD_URL + '/rest/v1/payments?companyid=eq.' + currentUser.companyId + '&order=expected_date.desc', { headers: hdrs });

@@ -113,13 +113,13 @@
 
         // 加载开票类型选项
         function loadInvoiceTypes() {
-            fetch(CLOUD_URL + '/rest/v1/tax_settings?order=invoice_type', { headers: hdrs })
+            fetch(CLOUD_URL + '/rest/v1/taxsettings?order=invoicetype', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     taxSettings = data || [];
                     var select = document.getElementById('invoiceType');
                     select.innerHTML = '<option value="">选择开票类型</option>' + taxSettings.map(function(t) {
-                        return '<option value="' + t.invoice_type + '">' + t.invoice_type + '</option>';
+                        return '<option value="' + t.invoicetype + '">' + t.invoicetype + '</option>';
                     }).join('');
                     
                     // 如果是编辑模式，恢复选中值
@@ -170,11 +170,11 @@
             if (amount === 0 || !invoiceTypeName) return;
             
             // 从缓存中查找税率
-            var tax = taxSettings.find(function(t) { return t.invoice_type === invoiceTypeName; });
+            var tax = taxSettings.find(function(t) { return t.invoicetype === invoiceTypeName; });
             if (!tax) return;
             
-            var vatRate = parseFloat(tax.vat_rate) || 0;
-            var incomeTaxRate = parseFloat(tax.income_tax_rate) || 0;
+            var vatRate = parseFloat(tax.vatrate) || 0;
+            var incomeTaxRate = parseFloat(tax.incometaxrate) || 0;
             var surtaxRate = parseFloat(tax.surtax_rate) || 0;
             
             var vat = amount * vatRate;

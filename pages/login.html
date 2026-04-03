@@ -242,18 +242,20 @@
                         if (existing && existing.length > 0) {
                             throw new Error('用户名已被使用');
                         }
-                        // 创建公司
+                        // 创建公司（如果已存在则使用已有的）
                         var companyId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8); return v.toString(16); });
                         return fetch(CLOUD_URL + '/rest/v1/companies', {
                             method: 'POST',
                             headers: hdrs,
                             body: JSON.stringify({ id: companyId, name: company, created_at: new Date().toISOString() })
+                        }).then(function(r) {
+                            if (r.ok) return r.json();
+                            // 409=公司已存在，查询已有的
+                            if (r.status === 409) {
+                                return fetch(CLOUD_URL + '/rest/v1/companies?name=eq.' + encodeURIComponent(company) + '&select=id', { headers: hdrs }).then(function(r2) { return r2.json(); });
+                            }
+                            return r.text().then(function(t) { throw new Error('创建公司失败: ' + t); });
                         });
-                    })
-                    .then(function(r) { 
-                        if (!r.ok) return r.text().then(function(t) { throw new Error('创建公司失败: ' + t); });
-                        return r.json(); 
-                    })
                     .then(function(newCompany) {
                         if (!newCompany || newCompany.length === 0) throw new Error('创建公司失败');
                         // 创建用户（待审批）

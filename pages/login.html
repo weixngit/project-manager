@@ -47,6 +47,14 @@
                     <input type="password" id="password" placeholder="请输入密码" maxlength="20" autocomplete="current-password">
                 </div>
                 
+                <div class="form-group" id="role-group">
+                    <label>登录身份</label>
+                    <select id="login-role" style="width:100%;padding:12px 16px;border:1px solid #ddd;border-radius:8px;font-size:15px;box-sizing:border-box;">
+                        <option value="user">普通用户</option>
+                        <option value="admin">管理员</option>
+                    </select>
+                </div>
+                
                 <div class="error-msg" id="login-error">用户名或密码错误</div>
                 
                 <button type="submit" class="btn-login" id="submit-btn">登录</button>
@@ -70,6 +78,7 @@
         var submitBtn = document.getElementById('submit-btn');
         var modeText = document.getElementById('mode-text');
         var companyGroup = document.getElementById('company-group');
+        var roleGroup = document.getElementById('role-group');
         var loginError = document.getElementById('login-error');
         
         switchBtn.addEventListener('click', function() {
@@ -79,11 +88,13 @@
                 submitBtn.textContent = '登录';
                 switchBtn.textContent = '还没有账号？立即注册';
                 companyGroup.classList.remove('show');
+                roleGroup.style.display = '';
             } else {
                 modeText.textContent = '注册新账号';
                 submitBtn.textContent = '注册';
                 switchBtn.textContent = '已有账号？立即登录';
                 companyGroup.classList.add('show');
+                roleGroup.style.display = 'none';
             }
             loginError.style.display = 'none';
         });
@@ -119,6 +130,7 @@
                 submitBtn.disabled = true;
                 
                 var pwdHash = hashPassword(password);
+                var selectedRole = document.getElementById('login-role').value;
                 
                 fetch(CLOUD_URL + '/rest/v1/users?username=eq.' + encodeURIComponent(username) + '&select=*', { headers: hdrs })
                     .then(function(r) { 
@@ -134,6 +146,10 @@
                             console.log('数据库密码哈希:', u.passwordhash);
                             
                             if (u.passwordhash === pwdHash) {
+                                // 检查角色是否匹配
+                                if (u.role !== selectedRole) {
+                                    throw new Error('该用户不是' + (selectedRole === 'admin' ? '管理员' : '普通用户'));
+                                }
                                 // 获取公司信息
                                 return fetch(CLOUD_URL + '/rest/v1/companies?id=eq.' + u.companyid, { headers: hdrs })
                                     .then(function(r) { return r.json(); })

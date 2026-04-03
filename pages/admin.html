@@ -31,33 +31,22 @@
         .stat-box .number { font-size: 24px; font-weight: 600; color: #667eea; }
         .stat-box .label { font-size: 12px; color: #999; margin-top: 4px; }
         
-        /* 税票设置 */
-        .tax-card { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .tax-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
-        .tax-card-title { font-size: 15px; font-weight: 500; color: #333; }
-        .tax-rate-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
-        .tax-rate-item { text-align: center; padding: 8px; border-radius: 6px; background: #f5f5f5; cursor: pointer; }
-        .tax-rate-item:hover { background: #e6f7ff; }
-        .tax-rate-item.active { background: #667eea; color: white; }
-        .tax-rate-item span { display: block; }
-        .tax-rate-item .rate { font-size: 16px; font-weight: 600; }
-        .tax-rate-item .label { font-size: 11px; color: #999; margin-top: 2px; }
-        .tax-rate-item.active .label { color: rgba(255,255,255,0.8); }
-        .tax-custom { display: flex; align-items: center; gap: 8px; }
-        .tax-custom input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .add-tax-btn { display: block; width: 100%; padding: 12px; background: #f5f5f5; border: 1px dashed #ddd; border-radius: 8px; color: #666; font-size: 14px; cursor: pointer; text-align: center; margin-top: 12px; }
-        .add-tax-btn:hover { background: #f0f0f0; }
+        /* 税率设置 */
+        .invoice-type-section { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+        .invoice-type-header { font-weight: 500; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .tax-rates-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tax-rate-tag { display: inline-flex; align-items: center; padding: 6px 12px; background: #f5f5f5; border-radius: 16px; font-size: 14px; }
+        .tax-rate-tag .del { margin-left: 8px; color: #999; cursor: pointer; font-size: 16px; }
+        .tax-rate-tag .del:hover { color: #ff4d4f; }
+        .add-rate-form { display: flex; gap: 8px; margin-top: 12px; }
+        .add-rate-form input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
         
         /* 用户审批 */
-        .user-approval-item { display: flex; align-items: center; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-        .user-approval-item .info { flex: 1; }
-        .user-approval-item .username { font-weight: 500; }
-        .user-approval-item .company { font-size: 12px; color: #999; margin-top: 2px; }
-        .user-approval-item .actions { display: flex; gap: 8px; }
-        
-        /* 密码修改 */
-        .pwd-edit-form { background: white; padding: 16px; border-radius: 8px; margin-bottom: 12px; }
-        .pwd-edit-form input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 8px; box-sizing: border-box; }
+        .user-item { display: flex; align-items: center; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .user-item .info { flex: 1; }
+        .user-item .username { font-weight: 500; }
+        .user-item .company { font-size: 12px; color: #999; margin-top: 2px; }
+        .user-item .actions { display: flex; gap: 8px; }
     </style>
 </head>
 <body>
@@ -68,8 +57,7 @@
     
     <div class="admin-tabs">
         <div class="admin-tab active" data-tab="users">用户管理</div>
-        <div class="admin-tab" data-tab="tax">税票设置</div>
-        <div class="admin-tab" data-tab="companies">公司管理</div>
+        <div class="admin-tab" data-tab="tax">税率设置</div>
         <div class="admin-tab" data-tab="stats">数据统计</div>
     </div>
     
@@ -82,17 +70,37 @@
         <div id="approved-users"><div class="empty-tip">加载中...</div></div>
     </div>
     
-    <!-- 税票设置 -->
+    <!-- 税率设置 -->
     <div class="tab-content" id="tax-tab">
-        <div class="section-title">开票类型与税率设置</div>
-        <div id="tax-settings-list"><div class="empty-tip">加载中...</div></div>
-        <button class="add-tax-btn" onclick="addTaxType()">+ 添加开票类型</button>
-    </div>
-    
-    <!-- 公司管理 -->
-    <div class="tab-content" id="companies-tab">
-        <div class="section-title">公司列表</div>
-        <table class="data-table"><thead><tr><th>公司名称</th><th>创建时间</th><th>用户数</th><th>操作</th></tr></thead><tbody id="company-list"><tr><td colspan="4" class="empty-tip">加载中...</td></tr></tbody></table>
+        <div class="section-title">发票类型与税率设置</div>
+        
+        <div class="invoice-type-section">
+            <div class="invoice-type-header">
+                <span>增值税专用发票</span>
+            </div>
+            <div class="tax-rates-list" id="rates-special"></div>
+            <div class="add-rate-form">
+                <input type="number" id="new-rate-special" placeholder="输入税率（如：9）" min="0" max="100" step="0.1">
+                <span>%</span>
+                <button class="btn-small btn-primary" onclick="addRate('special')">添加</button>
+            </div>
+        </div>
+        
+        <div class="invoice-type-section">
+            <div class="invoice-type-header">
+                <span>增值税普通发票</span>
+            </div>
+            <div class="tax-rates-list" id="rates-normal"></div>
+            <div class="add-rate-form">
+                <input type="number" id="new-rate-normal" placeholder="输入税率（如：3）" min="0" max="100" step="0.1">
+                <span>%</span>
+                <button class="btn-small btn-primary" onclick="addRate('normal')">添加</button>
+            </div>
+        </div>
+        
+        <div style="margin-top:16px;color:#999;font-size:13px;">
+            提示：删除税率后，使用该税率的已有项目不受影响
+        </div>
     </div>
     
     <!-- 数据统计 -->
@@ -116,9 +124,7 @@
         var currentUser = JSON.parse(userStr);
         if (currentUser.role !== 'admin') { alert('无权访问'); window.location.href = '../index.html'; }
         
-        var taxSettings = [];
-        var allUsers = [];
-        var allCompanies = [];
+        var allUsers = [], allCompanies = [], taxRatesSpecial = [], taxRatesNormal = [];
         
         // Tab 切换
         document.querySelectorAll('.admin-tab').forEach(function(tab) {
@@ -161,11 +167,8 @@
                 return;
             }
             container.innerHTML = users.map(function(u) {
-                return '<div class="user-approval-item">' +
-                    '<div class="info">' +
-                        '<div class="username">' + u.username + '</div>' +
-                        '<div class="company">公司: ' + getCompanyName(u.companyid) + '</div>' +
-                    '</div>' +
+                return '<div class="user-item">' +
+                    '<div class="info"><div class="username">' + u.username + '</div><div class="company">公司: ' + getCompanyName(u.companyid) + '</div></div>' +
                     '<div class="actions">' +
                         '<button class="btn-small btn-success" onclick="approveUser(\'' + u.id + '\')">通过</button>' +
                         '<button class="btn-small btn-danger" onclick="deleteUser(\'' + u.id + '\')">删除</button>' +
@@ -182,11 +185,8 @@
             }
             container.innerHTML = users.map(function(u) {
                 var roleTag = u.role === 'admin' ? '<span class="tag tag-admin">管理员</span>' : '<span class="tag tag-user">普通用户</span>';
-                return '<div class="user-approval-item">' +
-                    '<div class="info">' +
-                        '<div class="username">' + u.username + ' ' + roleTag + '</div>' +
-                        '<div class="company">公司: ' + getCompanyName(u.companyid) + '</div>' +
-                    '</div>' +
+                return '<div class="user-item">' +
+                    '<div class="info"><div class="username">' + u.username + ' ' + roleTag + '</div><div class="company">公司: ' + getCompanyName(u.companyid) + '</div></div>' +
                     '<div class="actions">' +
                         '<button class="btn-small btn-primary" onclick="showEditPwd(\'' + u.id + '\',\'' + u.username + '\')">改密</button>' +
                         (u.role !== 'admin' ? '<button class="btn-small btn-danger" onclick="deleteUser(\'' + u.id + '\')">删除</button>' : '') +
@@ -225,108 +225,76 @@
             }
         }
         
-        // ========== 税票设置 ==========
+        // ========== 税率设置 ==========
         var PRESET_RATES = [1, 3, 6, 9, 13, 20];
         
-        function loadTaxSettings() {
+        function loadTaxRates() {
             fetch(CLOUD_URL + '/rest/v1/taxsettings?order=invoicetype', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    taxSettings = data || [];
-                    renderTaxSettings();
+                    taxRatesSpecial = (data || []).filter(function(t) { return t.invoicetype === '专用发票'; }).map(function(t) { return t.vatrate * 100; });
+                    taxRatesNormal = (data || []).filter(function(t) { return t.invoicetype === '普通发票'; }).map(function(t) { return t.vatrate * 100; });
+                    renderTaxRates();
                 });
         }
         
-        function renderTaxSettings() {
-            var container = document.getElementById('tax-settings-list');
-            if (taxSettings.length === 0) {
-                container.innerHTML = '<div class="empty-tip">暂无设置，请添加开票类型</div>';
+        function renderTaxRates() {
+            document.getElementById('rates-special').innerHTML = taxRatesSpecial.length === 0 
+                ? '<span style="color:#999;">暂无税率，请添加</span>'
+                : taxRatesSpecial.map(function(r) { 
+                    return '<span class="tax-rate-tag">' + r + '%<span class="del" onclick="deleteRate(\'专用发票\',' + r + ')">×</span></span>'; 
+                }).join('');
+            
+            document.getElementById('rates-normal').innerHTML = taxRatesNormal.length === 0 
+                ? '<span style="color:#999;">暂无税率，请添加</span>'
+                : taxRatesNormal.map(function(r) { 
+                    return '<span class="tax-rate-tag">' + r + '%<span class="del" onclick="deleteRate(\'普通发票\',' + r + ')">×</span></span>'; 
+                }).join('');
+        }
+        
+        function addRate(type) {
+            var inputId = type === 'special' ? 'new-rate-special' : 'new-rate-normal';
+            var input = document.getElementById(inputId);
+            var rate = parseFloat(input.value);
+            if (!rate || rate <= 0 || rate > 100) {
+                alert('请输入有效的税率（0-100）');
                 return;
             }
-            container.innerHTML = taxSettings.map(function(t, i) {
-                var currentRate = (parseFloat(t.vatrate) || 0) * 100;
-                var rateButtons = PRESET_RATES.map(function(r) {
-                    var active = Math.abs(currentRate - r) < 0.01 ? 'active' : '';
-                    return '<div class="tax-rate-item ' + active + '" onclick="setRate(' + i + ', ' + r + ', this)"><span class="rate">' + r + '%</span><span class="label">预设</span></div>';
-                }).join('');
-                
-                return '<div class="tax-card" data-id="' + t.id + '">' +
-                    '<div class="tax-card-header">' +
-                        '<input type="text" class="tax-card-title" value="' + (t.invoicetype || '') + '" placeholder="开票类型名称" onchange="updateTaxName(' + i + ', this.value)">' +
-                        '<button class="btn-small btn-danger" onclick="deleteTax(\'' + t.id + '\')">删除</button>' +
-                    '</div>' +
-                    '<div class="tax-rate-grid">' + rateButtons + '</div>' +
-                    '<div class="tax-custom">' +
-                        '<input type="number" placeholder="自定义税率%" value="' + (PRESET_RATES.indexOf(currentRate) < 0 ? currentRate : '') + '" min="0" max="100" step="0.1" onchange="setRateCustom(' + i + ', this.value)">' +
-                        '<span>%</span>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }
-        
-        function setRate(index, rate, el) {
-            var t = taxSettings[index];
-            if (!t) return;
-            var rateDecimal = rate / 100;
-            fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + t.id, {
-                method: 'PATCH', headers: hdrs, body: JSON.stringify({ vatrate: rateDecimal })
-            }).then(function() {
-                taxSettings[index].vatrate = rateDecimal;
-                renderTaxSettings();
-            });
-        }
-        
-        function setRateCustom(index, rate) {
-            if (!rate) return;
-            var t = taxSettings[index];
-            if (!t) return;
-            var rateDecimal = parseFloat(rate) / 100;
-            fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + t.id, {
-                method: 'PATCH', headers: hdrs, body: JSON.stringify({ vatrate: rateDecimal })
-            }).then(function() {
-                taxSettings[index].vatrate = rateDecimal;
-                renderTaxSettings();
-            });
-        }
-        
-        function updateTaxName(index, name) {
-            var t = taxSettings[index];
-            if (!t) return;
-            fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + t.id, {
-                method: 'PATCH', headers: hdrs, body: JSON.stringify({ invoicetype: name })
-            }).then(function() {
-                taxSettings[index].invoicetype = name;
-            });
-        }
-        
-        function addTaxType() {
-            var name = prompt('请输入开票类型名称（如：增值税专用发票）:');
-            if (!name) return;
-            fetch(CLOUD_URL + '/rest/v1/taxsettings', {
-                method: 'POST', headers: hdrs, body: JSON.stringify({ invoicetype: name, vatrate: 0.13 })
-            }).then(function(r) { return r.json(); }).then(function() { loadTaxSettings(); });
-        }
-        
-        function deleteTax(id) {
-            if (!confirm('确定删除该开票类型？')) return;
-            fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + id, { method: 'DELETE', headers: hdrs }).then(function() { loadTaxSettings(); });
-        }
-        
-        // ========== 数据加载 ==========
-        function loadData() {
-            fetch(CLOUD_URL + '/rest/v1/companies?select=*&order=created_at.desc', { headers: hdrs })
-                .then(function(r) { return r.json(); })
-                .then(function(companies) {
-                    document.getElementById('stat-companies').textContent = companies.length;
-                    var tbody = document.getElementById('company-list');
-                    if (companies.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="empty-tip">暂无公司</td></tr>'; return; }
-                    tbody.innerHTML = companies.map(function(c) {
-                        var userCount = allUsers.filter(function(u) { return u.companyid === c.id; }).length;
-                        return '<tr><td>' + c.name + '</td><td>' + new Date(c.created_at).toLocaleDateString() + '</td><td>' + userCount + '</td><td><button class="btn-small btn-danger" onclick="deleteCompany(\'' + c.id + '\')">删除</button></td></tr>';
-                    }).join('');
-                });
             
+            // 检查是否已存在
+            var existing = type === 'special' ? taxRatesSpecial : taxRatesNormal;
+            if (existing.indexOf(rate) >= 0) {
+                alert('该税率已存在');
+                return;
+            }
+            
+            var invoicetype = type === 'special' ? '专用发票' : '普通发票';
+            fetch(CLOUD_URL + '/rest/v1/taxsettings', {
+                method: 'POST', headers: hdrs, 
+                body: JSON.stringify({ invoicetype: invoicetype, vatrate: rate / 100 })
+            }).then(function(r) { 
+                if (r.ok) { input.value = ''; loadTaxRates(); }
+            });
+        }
+        
+        function deleteRate(invoicetype, rate) {
+            if (!confirm('删除 ' + rate + '% 税率？')) return;
+            fetch(CLOUD_URL + '/rest/v1/taxsettings?invoicetype=eq.' + invoicetype + '&vatrate=eq.' + (rate / 100), { headers: hdrs })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data && data.length > 0) {
+                        return fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + data[0].id, { method: 'DELETE', headers: hdrs });
+                    }
+                })
+                .then(function() { loadTaxRates(); });
+        }
+        
+        // ========== 数据统计 ==========
+        function loadStats() {
             document.getElementById('stat-users').textContent = allUsers.length;
+            fetch(CLOUD_URL + '/rest/v1/companies?select=*', { headers: hdrs })
+                .then(function(r) { return r.json(); })
+                .then(function(c) { document.getElementById('stat-companies').textContent = c.length; });
             fetch(CLOUD_URL + '/rest/v1/projects?select=id', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(p) { document.getElementById('stat-projects').textContent = p.length; });
@@ -335,15 +303,10 @@
                 .then(function(c) { document.getElementById('stat-costs').textContent = c.length; });
         }
         
-        function deleteCompany(id) {
-            if (!confirm('确定删除该公司？')) return;
-            fetch(CLOUD_URL + '/rest/v1/companies?id=eq.' + id, { method: 'DELETE', headers: hdrs }).then(function() { loadData(); loadUsers(); });
-        }
-        
         // 初始化
         loadUsers();
-        loadTaxSettings();
-        loadData();
+        loadTaxRates();
+        loadStats();
     </script>
 </body>
 </html>

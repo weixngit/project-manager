@@ -72,7 +72,8 @@
                 <div class="form-group">
                     <label class="form-label">发票类型</label>
                     <select class="form-select" id="invoiceType">
-                        <option value="">选择发票类型</option>
+                        <option value="专用发票">增值税专用发票</option>
+                        <option value="普通发票">增值税普通发票</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -112,25 +113,19 @@
         var projectId = params.id;
         var isEdit = false;
         
-        // 加载发票类型和税率
-        function loadTaxSettings() {
+        // 加载税率
+        function loadTaxRates() {
             fetch(CLOUD_URL + '/rest/v1/taxsettings?select=*', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     data = data || [];
-                    var invTypes = data.filter(function(t) { return t.type === 'invoice_type'; });
                     var rates = data.filter(function(t) { return t.type === 'tax_rate'; });
-                    
-                    document.getElementById('invoiceType').innerHTML = '<option value="">选择发票类型</option>' + 
-                        invTypes.map(function(t) { return '<option value="' + t.name + '">' + t.name + '</option>'; }).join('');
-                    
                     document.getElementById('taxRate').innerHTML = '<option value="">选择税率</option>' + 
                         rates.map(function(t) { return '<option value="' + t.rate + '">' + (parseFloat(t.rate) * 100) + '%</option>'; }).join('');
                     
                     if (isEdit) {
                         var project = ProjectStore.getById(projectId);
                         if (project) {
-                            document.getElementById('invoiceType').value = project.invoiceType || '';
                             document.getElementById('taxRate').value = project.taxRate || '';
                             calculateTax();
                         }

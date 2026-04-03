@@ -39,7 +39,7 @@
             try {
                 const rp = await fetch(CLOUD.url + '/rest/v1/projects?order=updated_at.desc', { headers: hdrs });
                 const projects = await rp.json();
-                if (projects && projects.length > 0) Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({ id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' })));
+                if (projects && projects.length > 0) Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({ id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxRate: p.tax_rate||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' }));
                 
                 const rc = await fetch(CLOUD.url + '/rest/v1/costs?order=created_at.desc', { headers: hdrs });
                 const costs = await rc.json();
@@ -125,7 +125,8 @@
                         <div><strong>甲方：</strong>${project.client||'-'}</div>
                         <div><strong>联系人：</strong>${project.clientContact||'-'} ${project.clientPhone?'('+project.clientPhone+')':''}</div>
                         <div><strong>负责人：</strong>${project.manager||'-'} ${project.managerPhone?'('+project.managerPhone+')':''}</div>
-                        <div><strong>开票类型：</strong>${project.invoiceType==='general'?'一般纳税人':project.invoiceType==='small'?'小规模纳税人':'-'}</div>
+                        <div><strong>发票类型：</strong>${project.invoiceType||'-'}</div>
+                        <div><strong>税率：</strong>${project.taxRate?(parseFloat(project.taxRate)*100)+'%':'-'}</div>
                         <div><strong>预计税费：</strong>${Utils.formatMoney(project.taxAmount)}</div>
                         <div><strong>开始/结束：</strong>${project.startDate||'-'} / ${project.endDate||'-'}</div>
                         ${project.remark?'<div><strong>备注：</strong>'+project.remark+'</div>':''}

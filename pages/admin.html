@@ -6,31 +6,11 @@
     <title>管理后台 - 工程项目管理</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        .admin-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .admin-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
         .admin-header h1 { font-size: 18px; margin: 0; }
         .admin-header .logout { font-size: 14px; opacity: 0.9; cursor: pointer; }
-        .admin-tabs {
-            display: flex;
-            background: white;
-            border-bottom: 1px solid #eee;
-            overflow-x: auto;
-        }
-        .admin-tab {
-            padding: 14px 16px;
-            text-align: center;
-            font-size: 14px;
-            color: #666;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            white-space: nowrap;
-        }
+        .admin-tabs { display: flex; background: white; border-bottom: 1px solid #eee; overflow-x: auto; }
+        .admin-tab { padding: 14px 16px; text-align: center; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
         .admin-tab.active { color: #667eea; border-bottom-color: #667eea; }
         .tab-content { display: none; padding: 16px; }
         .tab-content.active { display: block; }
@@ -50,8 +30,6 @@
         .stat-box { background: white; padding: 16px; border-radius: 8px; text-align: center; }
         .stat-box .number { font-size: 24px; font-weight: 600; color: #667eea; }
         .stat-box .label { font-size: 12px; color: #999; margin-top: 4px; }
-        
-        /* 税票设置样式 */
         .tax-card { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
         .tax-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .tax-card-title { font-size: 15px; font-weight: 500; color: #333; }
@@ -80,38 +58,24 @@
     <!-- 税票设置 -->
     <div class="tab-content active" id="tax-tab">
         <div class="section-title">开票类型与税点设置</div>
-        <div id="tax-settings-list">
-            <div class="empty-tip">加载中...</div>
-        </div>
+        <div id="tax-settings-list"><div class="empty-tip">加载中...</div></div>
         <button class="add-tax-btn" onclick="addTaxType()">+ 添加开票类型</button>
     </div>
     
     <!-- 公司管理 -->
     <div class="tab-content" id="companies-tab">
         <div class="stats-grid">
-            <div class="stat-box">
-                <div class="number" id="company-count">0</div>
-                <div class="label">公司总数</div>
-            </div>
-            <div class="stat-box">
-                <div class="number" id="project-count">0</div>
-                <div class="label">项目总数</div>
-            </div>
+            <div class="stat-box"><div class="number" id="company-count">0</div><div class="label">公司总数</div></div>
+            <div class="stat-box"><div class="number" id="project-count">0</div><div class="label">项目总数</div></div>
         </div>
         <div class="section-title">公司列表</div>
-        <table class="data-table">
-            <thead><tr><th>公司名称</th><th>创建时间</th><th>用户数</th><th>项目数</th><th>操作</th></tr></thead>
-            <tbody id="company-list"><tr><td colspan="5" class="empty-tip">加载中...</td></tr></tbody>
-        </table>
+        <table class="data-table"><thead><tr><th>公司名称</th><th>创建时间</th><th>用户数</th><th>项目数</th><th>操作</th></tr></thead><tbody id="company-list"><tr><td colspan="5" class="empty-tip">加载中...</td></tr></tbody></table>
     </div>
     
     <!-- 用户管理 -->
     <div class="tab-content" id="users-tab">
         <div class="section-title">用户列表</div>
-        <table class="data-table">
-            <thead><tr><th>用户名</th><th>所属公司</th><th>角色</th><th>创建时间</th><th>操作</th></tr></thead>
-            <tbody id="user-list"><tr><td colspan="5" class="empty-tip">加载中...</td></tr></tbody>
-        </table>
+        <table class="data-table"><thead><tr><th>用户名</th><th>所属公司</th><th>角色</th><th>创建时间</th><th>操作</th></tr></thead><tbody id="user-list"><tr><td colspan="5" class="empty-tip">加载中...</td></tr></tbody></table>
     </div>
     
     <!-- 数据统计 -->
@@ -148,14 +112,11 @@
             });
         });
         
-        function logout() {
-            localStorage.removeItem('pm_user');
-            window.location.href = 'login.html';
-        }
+        function logout() { localStorage.removeItem('pm_user'); window.location.href = 'login.html'; }
         
         // ========== 税票设置 ==========
         function loadTaxSettings() {
-            fetch(CLOUD_URL + '/rest/v1/tax_settings?order=invoice_type', { headers: hdrs })
+            fetch(CLOUD_URL + '/rest/v1/taxsettings?order=invoicetype', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     taxSettings = data || [];
@@ -173,22 +134,17 @@
             container.innerHTML = taxSettings.map(function(t, i) {
                 return '<div class="tax-card">' +
                     '<div class="tax-card-header">' +
-                        '<input type="text" class="tax-input" value="' + (t.invoice_type || '') + '" placeholder="开票类型名称" style="max-width:200px;font-weight:500;" onchange="updateTax(' + i + ', \'invoice_type\', this.value)">' +
+                        '<input type="text" class="tax-input" value="' + (t.invoicetype || '') + '" placeholder="开票类型名称" style="max-width:200px;font-weight:500;" onchange="updateTax(' + i + ', \'invoicetype\', this.value)">' +
                         '<button class="btn-small btn-danger" onclick="deleteTax(\'' + t.id + '\')">删除</button>' +
                     '</div>' +
                     '<div class="tax-row">' +
                         '<span class="tax-label">增值税率</span>' +
-                        '<input type="number" class="tax-input" value="' + (parseFloat(t.vat_rate) * 100 || 0).toFixed(2) + '" step="0.01" onchange="updateTax(' + i + ', \'vat_rate\', this.value)">' +
+                        '<input type="number" class="tax-input" value="' + ((parseFloat(t.vatrate) || 0) * 100).toFixed(2) + '" step="0.01" onchange="updateTax(' + i + ', \'vatrate\', this.value)">' +
                         '<span class="tax-unit">%</span>' +
                     '</div>' +
                     '<div class="tax-row">' +
                         '<span class="tax-label">所得税率</span>' +
-                        '<input type="number" class="tax-input" value="' + (parseFloat(t.income_tax_rate) * 100 || 0).toFixed(2) + '" step="0.01" onchange="updateTax(' + i + ', \'income_tax_rate\', this.value)">' +
-                        '<span class="tax-unit">%</span>' +
-                    '</div>' +
-                    '<div class="tax-row">' +
-                        '<span class="tax-label">附加税率</span>' +
-                        '<input type="number" class="tax-input" value="' + (parseFloat(t.surtax_rate) * 100 || 0).toFixed(2) + '" step="0.01" onchange="updateTax(' + i + ', \'surtax_rate\', this.value)">' +
+                        '<input type="number" class="tax-input" value="' + ((parseFloat(t.incometaxrate) || 0) * 100).toFixed(2) + '" step="0.01" onchange="updateTax(' + i + ', \'incometaxrate\', this.value)">' +
                         '<span class="tax-unit">%</span>' +
                     '</div>' +
                 '</div>';
@@ -196,55 +152,33 @@
         }
         
         function addTaxType() {
-            var newTax = {
-                invoice_type: '新类型',
-                vat_rate: 0,
-                income_tax_rate: 0,
-                surtax_rate: 0.12
-            };
-            
-            fetch(CLOUD_URL + '/rest/v1/tax_settings', {
-                method: 'POST',
-                headers: hdrs,
-                body: JSON.stringify(newTax)
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                loadTaxSettings();
-            });
+            var newTax = { invoicetype: '新类型', vatrate: 0, incometaxrate: 0 };
+            fetch(CLOUD_URL + '/rest/v1/taxsettings', {
+                method: 'POST', headers: hdrs, body: JSON.stringify(newTax)
+            }).then(function(r) { return r.json(); }).then(function() { loadTaxSettings(); });
         }
         
         function updateTax(index, field, value) {
             var t = taxSettings[index];
             if (!t) return;
-            
             var updateData = {};
-            if (field === 'invoice_type') {
+            if (field === 'invoicetype') {
                 updateData[field] = value;
             } else {
-                // 百分比转小数
                 updateData[field] = parseFloat(value) / 100;
             }
-            
-            fetch(CLOUD_URL + '/rest/v1/tax_settings?id=eq.' + t.id, {
-                method: 'PATCH',
-                headers: hdrs,
-                body: JSON.stringify(updateData)
-            }).then(function() {
-                // 更新本地缓存
-                taxSettings[index][field] = updateData[field];
-            });
+            fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + t.id, {
+                method: 'PATCH', headers: hdrs, body: JSON.stringify(updateData)
+            }).then(function() { taxSettings[index][field] = updateData[field]; });
         }
         
         function deleteTax(id) {
             if (!confirm('确定删除该开票类型？')) return;
-            fetch(CLOUD_URL + '/rest/v1/tax_settings?id=eq.' + id, { method: 'DELETE', headers: hdrs })
-                .then(function() { loadTaxSettings(); });
+            fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + id, { method: 'DELETE', headers: hdrs }).then(function() { loadTaxSettings(); });
         }
         
         // ========== 数据加载 ==========
         function loadData() {
-            // 加载公司
             fetch(CLOUD_URL + '/rest/v1/companies?select=*&order=created_at.desc', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(companies) {
@@ -258,16 +192,11 @@
                     ]);
                 })
                 .then(function(results) {
-                    var companies = results[0];
-                    var users = results[1];
-                    var projects = results[2];
+                    var companies = results[0], users = results[1], projects = results[2];
                     document.getElementById('project-count').textContent = projects.length;
                     document.getElementById('stat-projects').textContent = projects.length;
                     var tbody = document.getElementById('company-list');
-                    if (companies.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" class="empty-tip">暂无公司</td></tr>';
-                        return;
-                    }
+                    if (companies.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-tip">暂无公司</td></tr>'; return; }
                     tbody.innerHTML = companies.map(function(c) {
                         var userCount = users.filter(function(u) { return u.companyid === c.id; }).length;
                         var projCount = projects.filter(function(p) { return p.companyid === c.id; }).length;
@@ -275,16 +204,12 @@
                     }).join('');
                 });
             
-            // 加载用户
             fetch(CLOUD_URL + '/rest/v1/users?select=*,companies(name)&order=created_at.desc', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(users) {
                     document.getElementById('stat-users').textContent = users.length;
                     var tbody = document.getElementById('user-list');
-                    if (users.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" class="empty-tip">暂无用户</td></tr>';
-                        return;
-                    }
+                    if (users.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-tip">暂无用户</td></tr>'; return; }
                     tbody.innerHTML = users.map(function(u) {
                         var roleClass = u.role === 'admin' ? 'tag-admin' : 'tag-user';
                         var roleText = u.role === 'admin' ? '管理员' : '普通用户';
@@ -292,25 +217,13 @@
                     }).join('');
                 });
             
-            // 加载成本统计
             fetch(CLOUD_URL + '/rest/v1/costs?select=id', { headers: hdrs })
                 .then(function(r) { return r.json(); })
-                .then(function(costs) {
-                    document.getElementById('stat-costs').textContent = costs.length;
-                });
+                .then(function(costs) { document.getElementById('stat-costs').textContent = costs.length; });
         }
         
-        function deleteCompany(id) {
-            if (!confirm('确定删除该公司？相关数据将保留但无法访问。')) return;
-            fetch(CLOUD_URL + '/rest/v1/companies?id=eq.' + id, { method: 'DELETE', headers: hdrs })
-                .then(function() { loadData(); });
-        }
-        
-        function deleteUser(id) {
-            if (!confirm('确定删除该用户？')) return;
-            fetch(CLOUD_URL + '/rest/v1/users?id=eq.' + id, { method: 'DELETE', headers: hdrs })
-                .then(function() { loadData(); });
-        }
+        function deleteCompany(id) { if (!confirm('确定删除该公司？')) return; fetch(CLOUD_URL + '/rest/v1/companies?id=eq.' + id, { method: 'DELETE', headers: hdrs }).then(function() { loadData(); }); }
+        function deleteUser(id) { if (!confirm('确定删除该用户？')) return; fetch(CLOUD_URL + '/rest/v1/users?id=eq.' + id, { method: 'DELETE', headers: hdrs }).then(function() { loadData(); }); }
         
         // 初始化
         loadTaxSettings();

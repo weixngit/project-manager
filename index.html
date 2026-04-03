@@ -47,6 +47,10 @@
                     <span class="menu-icon">📝</span>
                     <span class="menu-text">成本记录</span>
                 </a>
+                <a href="pages/admin.html" class="menu-item" id="admin-link" style="display:none;">
+                    <span class="menu-icon">🔧</span>
+                    <span class="menu-text">管理后台</span>
+                </a>
                 <a href="pages/invoice.html" class="menu-item">
                     <span class="menu-icon">🧾</span>
                     <span class="menu-text">票据管理</span>
@@ -88,6 +92,9 @@
         }
         var currentUser = JSON.parse(userStr);
         document.getElementById('user-info').textContent = currentUser.companyName + ' · ' + currentUser.username;
+        if (currentUser.role === 'admin') {
+            document.getElementById('admin-link').style.display = '';
+        }
         
         function logout() {
             localStorage.removeItem('pm_user');

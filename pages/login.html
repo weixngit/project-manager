@@ -247,7 +247,7 @@
                         return fetch(CLOUD_URL + '/rest/v1/companies', {
                             method: 'POST',
                             headers: hdrs,
-                            body: JSON.stringify({ id: companyId, name: company })
+                            body: JSON.stringify({ id: companyId, name: company, created_at: new Date().toISOString() })
                         });
                     })
                     .then(function(r) { 

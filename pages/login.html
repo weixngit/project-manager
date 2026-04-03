@@ -146,7 +146,11 @@
                                             companyName: (companies && companies.length > 0) ? companies[0].name : ''
                                         };
                                         localStorage.setItem('pm_user', JSON.stringify(userData));
-                                        window.location.href = '../index.html';
+                                        if (u.role === 'admin') {
+                                            window.location.href = 'admin.html';
+                                        } else {
+                                            window.location.href = '../index.html';
+                                        }
                                     });
                             } else {
                                 throw new Error('密码错误');

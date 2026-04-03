@@ -207,8 +207,8 @@
                     return;
                 }
                 
-                if (!username || username.length < 3) {
-                    loginError.textContent = '用户名至少3个字符';
+                if (!username || username.length < 2) {
+                    loginError.textContent = '用户名至少2个字符';
                     loginError.style.display = 'block';
                     submitBtn.textContent = '注册';
                     submitBtn.disabled = false;

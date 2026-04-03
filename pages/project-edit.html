@@ -70,9 +70,11 @@
                     <div style="text-align:center;color:#666;font-size:14px;" id="progress-value">0%</div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">开票类型</label>
+                    <label class="form-label">发票类型</label>
                     <select class="form-select" id="invoiceType">
-                        <option value="">选择开票类型</option>
+                        <option value="">选择发票类型</option>
+                        <option value="专用发票">增值税专用发票</option>
+                        <option value="普通发票">增值税普通发票</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -111,24 +113,18 @@
         var isEdit = false;
         var taxSettings = []; // 税率设置缓存
 
-        // 加载开票类型选项
-        function loadInvoiceTypes() {
+        // 发票类型选项
+        var select = document.getElementById('invoiceType');
+        select.innerHTML = '<option value="">选择发票类型</option>' +
+            '<option value="专用发票">增值税专用发票</option>' +
+            '<option value="普通发票">增值税普通发票</option>';
+        
+        // 加载税率设置
+        function loadTaxRates() {
             fetch(CLOUD_URL + '/rest/v1/taxsettings?order=invoicetype', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     taxSettings = data || [];
-                    var select = document.getElementById('invoiceType');
-                    select.innerHTML = '<option value="">选择开票类型</option>' + taxSettings.map(function(t) {
-                        return '<option value="' + t.invoicetype + '">' + t.invoicetype + '</option>';
-                    }).join('');
-                    
-                    // 如果是编辑模式，恢复选中值
-                    if (isEdit) {
-                        var project = ProjectStore.getById(projectId);
-                        if (project && project.invoiceType) {
-                            select.value = project.invoiceType;
-                        }
-                    }
                 });
         }
 
@@ -136,8 +132,8 @@
             document.getElementById('progress-value').textContent = this.value + '%';
         });
 
-        // 先加载开票类型
-        loadInvoiceTypes();
+        // 先加载税率设置
+        loadTaxRates();
 
         if (projectId) {
             isEdit = true;
@@ -174,17 +170,9 @@
             if (!tax) return;
             
             var vatRate = parseFloat(tax.vatrate) || 0;
-            var incomeTaxRate = parseFloat(tax.incometaxrate) || 0;
-            var surtaxRate = parseFloat(tax.surtax_rate) || 0;
+            var totalTax = amount * vatRate;
             
-            var vat = amount * vatRate;
-            var surtax = vat * surtaxRate;
-            var incomeTax = amount * incomeTaxRate;
-            var totalTax = vat + surtax + incomeTax;
-            
-            document.getElementById('vatAmount').textContent = Utils.formatMoney(vat);
-            document.getElementById('incomeTaxAmount').textContent = Utils.formatMoney(incomeTax);
-            document.getElementById('surtaxAmount').textContent = Utils.formatMoney(surtax);
+            document.getElementById('vatAmount').textContent = Utils.formatMoney(totalTax);
             document.getElementById('taxAmount').value = Math.round(totalTax);
         }
 

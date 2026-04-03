@@ -44,15 +44,15 @@
 
         async function syncFromCloud() {
             try {
-                const rp = await fetch(CLOUD.url + '/rest/v1/projects?company_id=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs });
+                const rp = await fetch(CLOUD.url + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs });
                 const projects = await rp.json();
                 if (projects && projects.length > 0) Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({ id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' })));
                 
-                const rc = await fetch(CLOUD.url + '/rest/v1/costs?company_id=eq.' + currentUser.companyId + '&order=created_at.desc', { headers: hdrs });
+                const rc = await fetch(CLOUD.url + '/rest/v1/costs?companyid=eq.' + currentUser.companyId + '&order=created_at.desc', { headers: hdrs });
                 const costs = await rc.json();
                 if (costs && costs.length > 0) Storage.set(Storage.KEYS.COSTS, costs.map(c => ({ id: c.id, projectId: c.project_id, type: c.type, amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.created_at||'' })));
                 
-                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?company_id=eq.' + currentUser.companyId + '&order=expected_date.desc', { headers: hdrs });
+                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?companyid=eq.' + currentUser.companyId + '&order=expected_date.desc', { headers: hdrs });
                 const payments = await rpay.json();
                 if (payments && payments.length > 0) Storage.set(Storage.KEYS.PAYMENTS, payments.map(p => ({ id: p.id, projectId: p.project_id, amount: p.amount, type: p.type||'final', expectedDate: p.expected_date||'', actualDate: (p.actual_date && p.actual_date !== 'null') ? p.actual_date : '', remark: p.remark||'', createdAt: p.created_at||'' })));
             } catch(e) { console.error('同步失败', e); }

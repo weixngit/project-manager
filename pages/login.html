@@ -158,6 +158,10 @@
                                 if (u.role !== selectedRole) {
                                     throw new Error('该用户不是' + (selectedRole === 'admin' ? '管理员' : '普通用户'));
                                 }
+                                // 检查是否已审批
+                                if (u.approved === false) {
+                                    throw new Error('账号待审核，请联系管理员');
+                                }
                                 // 获取公司信息
                                 return fetch(CLOUD_URL + '/rest/v1/companies?id=eq.' + u.companyid, { headers: hdrs })
                                     .then(function(r) { return r.json(); })
@@ -250,7 +254,7 @@
                     })
                     .then(function(newCompany) {
                         if (!newCompany || newCompany.length === 0) throw new Error('创建公司失败');
-                        // 创建用户
+                        // 创建用户（待审批）
                         return fetch(CLOUD_URL + '/rest/v1/users', {
                             method: 'POST',
                             headers: hdrs,
@@ -258,7 +262,8 @@
                                 username: username,
                                 passwordhash: pwdHash,
                                 companyid: newCompany[0].id,
-                                role: 'user'
+                                role: 'user',
+                                approved: false
                             })
                         });
                     })
@@ -267,7 +272,7 @@
                         return r.json();
                     })
                     .then(function() {
-                        alert('注册成功，请登录');
+                        alert('注册成功，请等待管理员审核后登录');
                         switchBtn.click();
                         submitBtn.textContent = '登录';
                         submitBtn.disabled = false;

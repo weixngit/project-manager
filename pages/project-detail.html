@@ -70,6 +70,12 @@
             const costs = CostStore.getByProjectId(projectId);
             const payments = PaymentStore.getByProjectId(projectId);
             const isProfit = profit && profit.profit >= 0;
+            
+            // 计算税费：销项税 = 开出普×税率 + 开出专×税率，进项抵扣 = 收到专×税率
+            const taxRate = parseFloat(project.taxRate) || 0;
+            const outputTax = (invoiceStats.outputPu + invoiceStats.outputZh) * taxRate;
+            const inputTax = invoiceStats.inputZh * taxRate;
+            const taxCalc = Math.round(outputTax - inputTax);
 
             const typeLabels = { labor: '人工分包', material: '设备材料', business: '商务费', machinery: '机械租赁', transport: '交通费', other: '杂费' };
 
@@ -116,6 +122,36 @@
                     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
                         <div style="background:#f6ffed;padding:12px;border-radius:8px;"><div style="font-size:12px;color:#52c41a;">已收款</div><div class="amount">${Utils.formatMoney(totalPaid)}</div></div>
                         <div style="background:#fff7e6;padding:12px;border-radius:8px;"><div style="font-size:12px;color:#faad14;">待收款</div><div class="amount">${Utils.formatMoney(totalPending)}</div></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h3>票据汇总</h3>
+                        <a href="invoice.html?projectId=${projectId}" style="font-size:13px;color:#1890ff;text-decoration:none;">管理票据 →</a>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                        <div style="background:#f6ffed;padding:10px;border-radius:6px;text-align:center;"><div style="font-size:11px;color:#52c41a;">收到票据</div><div class="amount" style="color:#52c41a;">${Utils.formatMoney(invoiceStats.inputAmount)}</div></div>
+                        <div style="background:#fff7e6;padding:10px;border-radius:6px;text-align:center;"><div style="font-size:11px;color:#fa8c16;">开出票据</div><div class="amount" style="color:#fa8c16;">${Utils.formatMoney(invoiceStats.outputAmount)}</div></div>
+                    </div>
+                    <div style="font-size:12px;color:#666;line-height:1.8;">
+                        <div>收到普票: ${Utils.formatMoney(invoiceStats.inputPu)} | 收到专票: ${Utils.formatMoney(invoiceStats.inputZh)}</div>
+                        <div>开出普票: ${Utils.formatMoney(invoiceStats.outputPu)} | 开出专票: ${Utils.formatMoney(invoiceStats.outputZh)}</div>
+                    </div>
+                </div>
+
+                <div class="card" style="background:#e6f7ff;border-left:3px solid #1890ff;">
+                    <h3 style="margin-bottom:12px;">💰 财务估算</h3>
+                    <div style="font-size:13px;line-height:2;">
+                        <div style="display:flex;justify-content:space-between;"><span>发票税费:</span><span style="color:#ff4d4f;">${Utils.formatMoney(taxCalc)}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>已收款:</span><span style="color:#52c41a;">${Utils.formatMoney(totalPaid)}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>总支出:</span><span style="color:#ff4d4f;">${Utils.formatMoney(profit ? profit.totalCost : 0)}</span></div>
+                    </div>
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #1890ff;">
+                        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:600;">
+                            <span>预估利润:</span>
+                            <span style="color:${isProfit ? '#52c41a' : '#ff4d4f'};">${Utils.formatMoney(profit ? (profit.profit - taxCalc) : 0)}</span>
+                        </div>
                     </div>
                 </div>
 

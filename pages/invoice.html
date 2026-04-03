@@ -430,54 +430,35 @@
 
             var invoice = InvoiceStore.add({ projectId: projectId, type: selectedType, amount: amount, number: number, date: date, party: party, remark: remark });
 
-            // 如果是"开出"发票，从云端获取税率设置并计算税费
+            // 如果是"开出"发票，根据项目税率计算税费
             if (selectedType === '开出') {
                 var project = ProjectStore.getById(projectId);
-                if (project && project.invoiceType) {
-                    // 从云端获取税率设置
-                    fetch(CLOUD_URL + '/rest/v1/taxsettings?invoicetype=eq.' + encodeURIComponent(project.invoiceType), { headers: hdrs })
-                        .then(function(r) { return r.json(); })
-                        .then(function(taxSettings) {
-                            if (taxSettings && taxSettings.length > 0) {
-                                var tax = taxSettings[0];
-                                var invoiceAmount = parseFloat(amount) || 0;
-                                var vatRate = parseFloat(tax.vatrate) || 0;
-                                var incomeTaxRate = parseFloat(tax.incometaxrate) || 0;
-                                var surtaxRate = parseFloat(tax.surtax_rate) || 0;
-                                
-                                var vat = invoiceAmount * vatRate;
-                                var incomeTax = invoiceAmount * incomeTaxRate;
-                                var surtax = vat * surtaxRate;
-                                var totalTax = Math.round(vat + incomeTax + surtax);
-                                
-                                if (totalTax > 0) {
-                                    var taxCost = CostStore.add({
-                                        projectId: projectId,
-                                        type: 'other',
-                                        amount: totalTax,
-                                        date: date,
-                                        remark: '税费（发票' + number + '，' + project.invoiceType + '）'
-                                    });
-                                    
-                                    fetch(CLOUD_URL + '/rest/v1/costs', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
-                                        body: JSON.stringify({ id: taxCost.id, project_id: taxCost.projectId, type: taxCost.type, amount: taxCost.amount, date: taxCost.date, remark: taxCost.remark || '', companyid: currentUser.companyId })
-                                    }).catch(function(e) {});
-                                    
-                                    Utils.showToast('添加成功，税费 ¥' + totalTax.toLocaleString() + ' 已计入成本');
-                                } else {
-                                    Utils.showToast('添加成功');
-                                }
-                            } else {
-                                Utils.showToast('添加成功（未找到税率设置）');
-                            }
-                        })
-                        .catch(function(e) {
-                            Utils.showToast('添加成功');
+                if (project && project.taxRate) {
+                    var invoiceAmount = parseFloat(amount) || 0;
+                    var taxRate = parseFloat(project.taxRate) || 0;
+                    var totalTax = Math.round(invoiceAmount * taxRate);
+                    
+                    if (totalTax > 0) {
+                        var taxCost = CostStore.add({
+                            projectId: projectId,
+                            type: 'other',
+                            amount: totalTax,
+                            date: date,
+                            remark: '税费（发票' + number + '）'
                         });
+                        
+                        fetch(CLOUD_URL + '/rest/v1/costs', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
+                            body: JSON.stringify({ id: taxCost.id, project_id: taxCost.projectId, type: taxCost.type, amount: taxCost.amount, date: taxCost.date, remark: taxCost.remark || '', companyid: currentUser.companyId })
+                        }).catch(function(e) {});
+                        
+                        Utils.showToast('添加成功，税费 ¥' + totalTax.toLocaleString() + ' 已计入成本');
+                    } else {
+                        Utils.showToast('添加成功');
+                    }
                 } else {
-                    Utils.showToast('添加成功（项目未设置开票类型）');
+                    Utils.showToast('添加成功');
                 }
             } else {
                 Utils.showToast('添加成功');

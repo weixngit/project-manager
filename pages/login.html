@@ -196,7 +196,7 @@
             
             if (isLoginMode) {
                 // 登录
-                fetch(CLOUD_URL + '/rest/v1/users?username=eq."' + username + '"&select=*', { headers: hdrs })
+                fetch(CLOUD_URL + '/rest/v1/users?username=eq.' + encodeURIComponent(username) + '&select=*', { headers: hdrs })
                     .then(function(r) { return r.json(); })
                     .then(function(users) {
                         if (users.length === 0) {

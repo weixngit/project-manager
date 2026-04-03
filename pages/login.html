@@ -251,7 +251,7 @@
                         });
                     })
                     .then(function(r) { 
-                        if (!r.ok) throw new Error('创建公司失败');
+                        if (!r.ok) return r.text().then(function(t) { throw new Error('创建公司失败: ' + t); });
                         return r.json(); 
                     })
                     .then(function(newCompany) {

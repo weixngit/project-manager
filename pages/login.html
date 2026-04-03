@@ -207,8 +207,9 @@
                     return;
                 }
                 
-                if (!username || username.length < 2) {
-                    loginError.textContent = '用户名至少2个字符';
+                var minLen = /^[\u4e00-\u9fa5]/.test(username) ? 2 : 3;
+                if (!username || username.length < minLen) {
+                    loginError.textContent = '用户名至少' + minLen + '个字符';
                     loginError.style.display = 'block';
                     submitBtn.textContent = '注册';
                     submitBtn.disabled = false;

@@ -31,15 +31,15 @@
         .stat-box .number { font-size: 24px; font-weight: 600; color: #667eea; }
         .stat-box .label { font-size: 12px; color: #999; margin-top: 4px; }
         
-        /* 税率设置 */
-        .invoice-type-section { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
-        .invoice-type-header { font-weight: 500; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .tax-rates-list { display: flex; flex-wrap: wrap; gap: 8px; }
-        .tax-rate-tag { display: inline-flex; align-items: center; padding: 6px 12px; background: #f5f5f5; border-radius: 16px; font-size: 14px; }
-        .tax-rate-tag .del { margin-left: 8px; color: #999; cursor: pointer; font-size: 16px; }
-        .tax-rate-tag .del:hover { color: #ff4d4f; }
-        .add-rate-form { display: flex; gap: 8px; margin-top: 12px; }
-        .add-rate-form input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        /* 设置卡片 */
+        .setting-card { background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .setting-header { font-weight: 500; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+        .rates-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+        .rate-tag { display: inline-flex; align-items: center; padding: 6px 12px; background: #f5f5f5; border-radius: 16px; font-size: 14px; }
+        .rate-tag .del { margin-left: 8px; color: #999; cursor: pointer; font-size: 16px; }
+        .rate-tag .del:hover { color: #ff4d4f; }
+        .add-form { display: flex; gap: 8px; align-items: center; }
+        .add-form input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
         
         /* 用户审批 */
         .user-item { display: flex; align-items: center; padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
@@ -72,34 +72,25 @@
     
     <!-- 税率设置 -->
     <div class="tab-content" id="tax-tab">
-        <div class="section-title">发票类型与税率设置</div>
+        <div class="section-title">发票类型与税率点数</div>
         
-        <div class="invoice-type-section">
-            <div class="invoice-type-header">
-                <span>增值税专用发票</span>
-            </div>
-            <div class="tax-rates-list" id="rates-special"></div>
-            <div class="add-rate-form">
-                <input type="number" id="new-rate-special" placeholder="输入税率（如：9）" min="0" max="100" step="0.1">
-                <span>%</span>
-                <button class="btn-small btn-primary" onclick="addRate('special')">添加</button>
+        <div class="setting-card">
+            <div class="setting-header">发票类型</div>
+            <div class="rates-list" id="invoice-types-list"><span style="color:#999;">暂无发票类型</span></div>
+            <div class="add-form">
+                <input type="text" id="new-invoice-type" placeholder="输入发票类型名称" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
+                <button class="btn-small btn-primary" onclick="addInvoiceType()">添加</button>
             </div>
         </div>
         
-        <div class="invoice-type-section">
-            <div class="invoice-type-header">
-                <span>增值税普通发票</span>
-            </div>
-            <div class="tax-rates-list" id="rates-normal"></div>
-            <div class="add-rate-form">
-                <input type="number" id="new-rate-normal" placeholder="输入税率（如：3）" min="0" max="100" step="0.1">
+        <div class="setting-card">
+            <div class="setting-header">税率点数</div>
+            <div class="rates-list" id="tax-rates-list"><span style="color:#999;">暂无税率点数</span></div>
+            <div class="add-form">
+                <input type="number" id="new-tax-rate" placeholder="输入税率（如：9）" min="0" max="100" step="0.1" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
                 <span>%</span>
-                <button class="btn-small btn-primary" onclick="addRate('normal')">添加</button>
+                <button class="btn-small btn-primary" onclick="addTaxRate()">添加</button>
             </div>
-        </div>
-        
-        <div style="margin-top:16px;color:#999;font-size:13px;">
-            提示：删除税率后，使用该税率的已有项目不受影响
         </div>
     </div>
     
@@ -124,7 +115,8 @@
         var currentUser = JSON.parse(userStr);
         if (currentUser.role !== 'admin') { alert('无权访问'); window.location.href = '../index.html'; }
         
-        var allUsers = [], allCompanies = [], taxRatesSpecial = [], taxRatesNormal = [];
+        var allUsers = [], allCompanies = [];
+        var invoiceTypes = [], taxRates = [];
         
         // Tab 切换
         document.querySelectorAll('.admin-tab').forEach(function(tab) {
@@ -226,35 +218,70 @@
         }
         
         // ========== 税率设置 ==========
-        var PRESET_RATES = [1, 3, 6, 9, 13, 20];
+        // 发票类型存储在 taxsettings 表，type='invoice_type'
+        // 税率点数存储在 taxsettings 表，type='tax_rate'
         
-        function loadTaxRates() {
-            fetch(CLOUD_URL + '/rest/v1/taxsettings?order=invoicetype', { headers: hdrs })
+        function loadTaxSettings() {
+            fetch(CLOUD_URL + '/rest/v1/taxsettings?select=*', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    taxRatesSpecial = (data || []).filter(function(t) { return t.invoicetype === '专用发票'; }).map(function(t) { return t.vatrate * 100; });
-                    taxRatesNormal = (data || []).filter(function(t) { return t.invoicetype === '普通发票'; }).map(function(t) { return t.vatrate * 100; });
+                    data = data || [];
+                    invoiceTypes = data.filter(function(t) { return t.type === 'invoice_type'; }).map(function(t) { return { id: t.id, name: t.name }; });
+                    taxRates = data.filter(function(t) { return t.type === 'tax_rate'; }).map(function(t) { return { id: t.id, rate: parseFloat(t.rate) || 0 }; });
+                    renderInvoiceTypes();
                     renderTaxRates();
                 });
         }
         
-        function renderTaxRates() {
-            document.getElementById('rates-special').innerHTML = taxRatesSpecial.length === 0 
-                ? '<span style="color:#999;">暂无税率，请添加</span>'
-                : taxRatesSpecial.map(function(r) { 
-                    return '<span class="tax-rate-tag">' + r + '%<span class="del" onclick="deleteRate(\'专用发票\',' + r + ')">×</span></span>'; 
-                }).join('');
-            
-            document.getElementById('rates-normal').innerHTML = taxRatesNormal.length === 0 
-                ? '<span style="color:#999;">暂无税率，请添加</span>'
-                : taxRatesNormal.map(function(r) { 
-                    return '<span class="tax-rate-tag">' + r + '%<span class="del" onclick="deleteRate(\'普通发票\',' + r + ')">×</span></span>'; 
-                }).join('');
+        function renderInvoiceTypes() {
+            var container = document.getElementById('invoice-types-list');
+            if (invoiceTypes.length === 0) {
+                container.innerHTML = '<span style="color:#999;">暂无发票类型</span>';
+                return;
+            }
+            container.innerHTML = invoiceTypes.map(function(t) {
+                return '<span class="rate-tag">' + t.name + '<span class="del" onclick="deleteInvoiceType(\'' + t.id + '\')">×</span></span>';
+            }).join('');
         }
         
-        function addRate(type) {
-            var inputId = type === 'special' ? 'new-rate-special' : 'new-rate-normal';
-            var input = document.getElementById(inputId);
+        function renderTaxRates() {
+            var container = document.getElementById('tax-rates-list');
+            if (taxRates.length === 0) {
+                container.innerHTML = '<span style="color:#999;">暂无税率点数</span>';
+                return;
+            }
+            container.innerHTML = taxRates.map(function(t) {
+                return '<span class="rate-tag">' + t.rate + '%<span class="del" onclick="deleteTaxRate(\'' + t.id + '\')">×</span></span>';
+            }).join('');
+        }
+        
+        function addInvoiceType() {
+            var input = document.getElementById('new-invoice-type');
+            var name = input.value.trim();
+            if (!name) { alert('请输入发票类型名称'); return; }
+            
+            // 检查是否已存在
+            if (invoiceTypes.some(function(t) { return t.name === name; })) {
+                alert('该发票类型已存在');
+                return;
+            }
+            
+            fetch(CLOUD_URL + '/rest/v1/taxsettings', {
+                method: 'POST', headers: hdrs,
+                body: JSON.stringify({ type: 'invoice_type', name: name })
+            }).then(function(r) {
+                if (r.ok) { input.value = ''; loadTaxSettings(); }
+            });
+        }
+        
+        function deleteInvoiceType(id) {
+            if (!confirm('删除该发票类型？')) return;
+            fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + id, { method: 'DELETE', headers: hdrs })
+                .then(function() { loadTaxSettings(); });
+        }
+        
+        function addTaxRate() {
+            var input = document.getElementById('new-tax-rate');
             var rate = parseFloat(input.value);
             if (!rate || rate <= 0 || rate > 100) {
                 alert('请输入有效的税率（0-100）');
@@ -262,31 +289,23 @@
             }
             
             // 检查是否已存在
-            var existing = type === 'special' ? taxRatesSpecial : taxRatesNormal;
-            if (existing.indexOf(rate) >= 0) {
+            if (taxRates.some(function(t) { return Math.abs(t.rate - rate) < 0.01; })) {
                 alert('该税率已存在');
                 return;
             }
             
-            var invoicetype = type === 'special' ? '专用发票' : '普通发票';
             fetch(CLOUD_URL + '/rest/v1/taxsettings', {
-                method: 'POST', headers: hdrs, 
-                body: JSON.stringify({ invoicetype: invoicetype, vatrate: rate / 100 })
-            }).then(function(r) { 
-                if (r.ok) { input.value = ''; loadTaxRates(); }
+                method: 'POST', headers: hdrs,
+                body: JSON.stringify({ type: 'tax_rate', rate: rate / 100, name: rate + '%' })
+            }).then(function(r) {
+                if (r.ok) { input.value = ''; loadTaxSettings(); }
             });
         }
         
-        function deleteRate(invoicetype, rate) {
-            if (!confirm('删除 ' + rate + '% 税率？')) return;
-            fetch(CLOUD_URL + '/rest/v1/taxsettings?invoicetype=eq.' + invoicetype + '&vatrate=eq.' + (rate / 100), { headers: hdrs })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data && data.length > 0) {
-                        return fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + data[0].id, { method: 'DELETE', headers: hdrs });
-                    }
-                })
-                .then(function() { loadTaxRates(); });
+        function deleteTaxRate(id) {
+            if (!confirm('删除该税率点数？')) return;
+            fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + id, { method: 'DELETE', headers: hdrs })
+                .then(function() { loadTaxSettings(); });
         }
         
         // ========== 数据统计 ==========
@@ -305,7 +324,7 @@
         
         // 初始化
         loadUsers();
-        loadTaxRates();
+        loadTaxSettings();
         loadStats();
     </script>
 </body>

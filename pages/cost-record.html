@@ -280,7 +280,7 @@
         var pageSize = 10;
 
         function syncFromCloud() {
-            fetch(CLOUD_URL + '/rest/v1/projects?company_id=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs })
+            fetch(CLOUD_URL + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(cloudProjects) {
                     if (cloudProjects && cloudProjects.length > 0) {
@@ -288,7 +288,7 @@
                             return { id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' };
                         }));
                     }
-                    return fetch(CLOUD_URL + '/rest/v1/costs?company_id=eq.' + currentUser.companyId + '&order=date.desc', { headers: hdrs });
+                    return fetch(CLOUD_URL + '/rest/v1/costs?companyid=eq.' + currentUser.companyId + '&order=date.desc', { headers: hdrs });
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(cloudCosts) {
@@ -427,7 +427,7 @@
             fetch(CLOUD_URL + '/rest/v1/costs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
-                body: JSON.stringify({ id: cost.id, project_id: cost.projectId, type: cost.type, amount: parseFloat(cost.amount) || 0, date: cost.date, remark: cost.remark || '', company_id: currentUser.companyId })
+                body: JSON.stringify({ id: cost.id, project_id: cost.projectId, type: cost.type, amount: parseFloat(cost.amount) || 0, date: cost.date, remark: cost.remark || '', companyid: currentUser.companyId })
             }).catch(function(e) {});
 
             Utils.showToast('记录成功');

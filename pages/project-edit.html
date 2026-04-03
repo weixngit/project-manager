@@ -73,14 +73,17 @@
                     <label class="form-label">发票类型</label>
                     <select class="form-select" id="invoiceType">
                         <option value="">选择发票类型</option>
-                        <option value="专用发票">增值税专用发票</option>
-                        <option value="普通发票">增值税普通发票</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">税率点数</label>
+                    <select class="form-select" id="taxRate">
+                        <option value="">选择税率</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">预计税费（元）</label>
-                    <input type="number" class="form-input" id="taxAmount" placeholder="输入预计税费" readonly style="background:#f5f5f5;">
-                    <div style="font-size:12px;color:#666;margin-top:4px;">增值税: <span id="vatAmount">¥0</span> | 所得税: <span id="incomeTaxAmount">¥0</span> | 附加税: <span id="surtaxAmount">¥0</span></div>
+                    <input type="number" class="form-input" id="taxAmount" placeholder="根据税率自动计算" readonly style="background:#f5f5f5;">
                 </div>
                 <div class="form-group">
                     <label class="form-label">备注</label>
@@ -98,11 +101,8 @@
     <script src="../js/storage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
-        // 检查登录
         var userStr = localStorage.getItem('pm_user');
-        if (!userStr) {
-            window.location.href = 'login.html';
-        }
+        if (!userStr) { window.location.href = 'login.html'; }
         var currentUser = JSON.parse(userStr);
         var CLOUD_URL = 'https://azspvriaxhlllgtphwgv.supabase.co';
         var CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3B2cmlheGhsbGxndHBod2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTM1OTMsImV4cCI6MjA5MDQyOTU5M30.6F3W6dYQ8DdtWRFBGBIejcms2XCvdMxWBvmOX_AMlAc';
@@ -111,29 +111,47 @@
         var params = Utils.getUrlParams();
         var projectId = params.id;
         var isEdit = false;
-        var taxSettings = []; // 税率设置缓存
-
-        // 发票类型选项
-        var select = document.getElementById('invoiceType');
-        select.innerHTML = '<option value="">选择发票类型</option>' +
-            '<option value="专用发票">增值税专用发票</option>' +
-            '<option value="普通发票">增值税普通发票</option>';
         
-        // 加载税率设置
-        function loadTaxRates() {
-            fetch(CLOUD_URL + '/rest/v1/taxsettings?order=invoicetype', { headers: hdrs })
+        // 加载发票类型和税率
+        function loadTaxSettings() {
+            fetch(CLOUD_URL + '/rest/v1/taxsettings?select=*', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    taxSettings = data || [];
+                    data = data || [];
+                    var invTypes = data.filter(function(t) { return t.type === 'invoice_type'; });
+                    var rates = data.filter(function(t) { return t.type === 'tax_rate'; });
+                    
+                    document.getElementById('invoiceType').innerHTML = '<option value="">选择发票类型</option>' + 
+                        invTypes.map(function(t) { return '<option value="' + t.name + '">' + t.name + '</option>'; }).join('');
+                    
+                    document.getElementById('taxRate').innerHTML = '<option value="">选择税率</option>' + 
+                        rates.map(function(t) { return '<option value="' + t.rate + '">' + (parseFloat(t.rate) * 100) + '%</option>'; }).join('');
+                    
+                    if (isEdit) {
+                        var project = ProjectStore.getById(projectId);
+                        if (project) {
+                            document.getElementById('invoiceType').value = project.invoiceType || '';
+                            document.getElementById('taxRate').value = project.taxRate || '';
+                            calculateTax();
+                        }
+                    }
                 });
         }
-
+        
+        function calculateTax() {
+            var amount = parseFloat(document.getElementById('contractAmount').value) || 0;
+            var rate = parseFloat(document.getElementById('taxRate').value) || 0;
+            document.getElementById('taxAmount').value = Math.round(amount * rate);
+        }
+        
         document.getElementById('progress').addEventListener('input', function() {
             document.getElementById('progress-value').textContent = this.value + '%';
         });
-
-        // 先加载税率设置
-        loadTaxRates();
+        
+        document.getElementById('contractAmount').addEventListener('input', calculateTax);
+        document.getElementById('taxRate').addEventListener('change', calculateTax);
+        
+        loadTaxSettings();
 
         if (projectId) {
             isEdit = true;
@@ -154,37 +172,12 @@
                 document.getElementById('progress').value = project.progress || 0;
                 document.getElementById('progress-value').textContent = (project.progress || 0) + '%';
                 document.getElementById('invoiceType').value = project.invoiceType || '';
+                document.getElementById('taxRate').value = project.taxRate || '';
                 document.getElementById('taxAmount').value = project.taxAmount || '';
                 document.getElementById('remark').value = project.remark || '';
-                if (project.invoiceType && project.contractAmount) calculateTax(project.contractAmount, project.invoiceType);
                 document.getElementById('delete-btn').style.display = 'block';
             }
         }
-
-        function calculateTax(contractAmount, invoiceTypeName) {
-            var amount = parseFloat(contractAmount) || 0;
-            if (amount === 0 || !invoiceTypeName) return;
-            
-            // 从缓存中查找税率
-            var tax = taxSettings.find(function(t) { return t.invoicetype === invoiceTypeName; });
-            if (!tax) return;
-            
-            var vatRate = parseFloat(tax.vatrate) || 0;
-            var totalTax = amount * vatRate;
-            
-            document.getElementById('vatAmount').textContent = Utils.formatMoney(totalTax);
-            document.getElementById('taxAmount').value = Math.round(totalTax);
-        }
-
-        document.getElementById('contractAmount').addEventListener('input', function() {
-            var invoiceType = document.getElementById('invoiceType').value;
-            if (invoiceType) calculateTax(this.value, invoiceType);
-        });
-
-        document.getElementById('invoiceType').addEventListener('change', function() {
-            var contractAmount = document.getElementById('contractAmount').value;
-            if (contractAmount) calculateTax(contractAmount, this.value);
-        });
 
         document.getElementById('project-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -202,6 +195,7 @@
                 status: document.getElementById('status').value,
                 progress: parseInt(document.getElementById('progress').value),
                 invoiceType: document.getElementById('invoiceType').value,
+                taxRate: document.getElementById('taxRate').value,
                 taxAmount: document.getElementById('taxAmount').value,
                 remark: document.getElementById('remark').value.trim()
             };
@@ -220,58 +214,37 @@
                         client_address: data.clientAddress, manager: data.manager, 
                         manager_phone: data.managerPhone, start_date: data.startDate, 
                         end_date: data.endDate, status: data.status, progress: data.progress, 
-                        invoice_type: data.invoiceType, tax_amount: data.taxAmount, 
+                        invoice_type: data.invoiceType, tax_rate: data.taxRate, tax_amount: data.taxAmount, 
                         remark: data.remark, updated_at: new Date().toISOString()
                     })
-                }).catch(function(e) { console.log('update error', e); });
+                }).catch(function(e) {});
                 Utils.showToast('保存成功');
             } else {
                 var project = ProjectStore.add(data);
-                console.log('saving project:', project.id, project.name);
-                
-                var dbData = {
-                    id: project.id, name: project.name, contract_amount: project.contractAmount,
-                    client: project.client||'', client_contact: project.clientContact||'',
-                    client_phone: project.clientPhone||'', client_address: project.clientAddress||'',
-                    manager: project.manager||'', manager_phone: project.managerPhone||'',
-                    start_date: project.startDate||null, end_date: project.endDate||null,
-                    status: project.status||'进行中', progress: project.progress||0,
-                    invoice_type: project.invoiceType||'', tax_amount: project.taxAmount||0,
-                    remark: project.remark||'',
-                    companyid: currentUser.companyId
-                };
-                console.log('db data:', JSON.stringify(dbData));
-                
                 fetch(CLOUD_URL + '/rest/v1/projects', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': CLOUD_KEY,
-                        'Authorization': 'Bearer ' + CLOUD_KEY,
-                        'Prefer': 'return=representation'
-                    },
-                    body: JSON.stringify(dbData)
+                    headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'return=representation' },
+                    body: JSON.stringify({
+                        id: project.id, name: project.name, contract_amount: project.contractAmount,
+                        client: project.client||'', client_contact: project.clientContact||'',
+                        client_phone: project.clientPhone||'', client_address: project.clientAddress||'',
+                        manager: project.manager||'', manager_phone: project.managerPhone||'',
+                        start_date: project.startDate||null, end_date: project.endDate||null,
+                        status: project.status||'进行中', progress: project.progress||0,
+                        invoice_type: project.invoiceType||'', tax_rate: project.taxRate||0, tax_amount: project.taxAmount||0,
+                        remark: project.remark||'',
+                        companyid: currentUser.companyId
+                    })
                 }).then(function(r) {
-                    console.log('project saved, status:', r.status);
-                    if (r.ok) {
-                        Utils.showToast('创建成功');
-                    } else {
-                        r.text().then(function(t) {
-                            console.error('save failed:', t);
-                            Utils.showToast('云端同步失败，但本地已保存');
-                        });
-                    }
-                }).catch(function(e) { 
-                    console.error('save error:', e); 
-                });
-                Utils.showToast('创建成功');
+                    if (r.ok) { Utils.showToast('创建成功'); }
+                    else { Utils.showToast('云端同步失败'); }
+                }).catch(function() {});
             }
-
             setTimeout(function() { location.href = 'project-list.html'; }, 500);
         });
 
         document.getElementById('delete-btn').addEventListener('click', function() {
-            if (confirm('确定要删除这个项目吗？相关的成本、回款、票据记录也会被删除。')) {
+            if (confirm('确定要删除这个项目吗？')) {
                 ProjectStore.delete(projectId);
                 Utils.showToast('已删除');
                 setTimeout(function() { location.href = 'project-list.html'; }, 500);

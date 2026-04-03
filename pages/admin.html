@@ -72,25 +72,24 @@
     
     <!-- 税率设置 -->
     <div class="tab-content" id="tax-tab">
-        <div class="section-title">发票类型与税率点数</div>
-        
+        <div class="section-title">发票类型</div>
         <div class="setting-card">
-            <div class="setting-header">发票类型</div>
-            <div class="rates-list" id="invoice-types-list"><span style="color:#999;">暂无发票类型</span></div>
-            <div class="add-form">
-                <input type="text" id="new-invoice-type" placeholder="输入发票类型名称" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
-                <button class="btn-small btn-primary" onclick="addInvoiceType()">添加</button>
+            <div class="rates-list">
+                <span class="rate-tag" style="background:#e6f7ff;">增值税专用发票</span>
+                <span class="rate-tag" style="background:#fff7e6;">增值税普通发票</span>
             </div>
+            <div style="font-size:12px;color:#999;margin-top:8px;">发票类型固定，不可修改</div>
         </div>
         
+        <div class="section-title">税率点数</div>
         <div class="setting-card">
-            <div class="setting-header">税率点数</div>
             <div class="rates-list" id="tax-rates-list"><span style="color:#999;">暂无税率点数</span></div>
             <div class="add-form">
                 <input type="number" id="new-tax-rate" placeholder="输入税率（如：9）" min="0" max="100" step="0.1" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;">
                 <span>%</span>
                 <button class="btn-small btn-primary" onclick="addTaxRate()">添加</button>
             </div>
+            <div style="font-size:12px;color:#999;margin-top:8px;">预设：1%、3%、6%、9%、13%、20%</div>
         </div>
     </div>
     
@@ -218,30 +217,15 @@
         }
         
         // ========== 税率设置 ==========
-        // 发票类型存储在 taxsettings 表，type='invoice_type'
-        // 税率点数存储在 taxsettings 表，type='tax_rate'
+        var taxRates = [];
         
-        function loadTaxSettings() {
+        function loadTaxRates() {
             fetch(CLOUD_URL + '/rest/v1/taxsettings?select=*', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    data = data || [];
-                    invoiceTypes = data.filter(function(t) { return t.type === 'invoice_type'; }).map(function(t) { return { id: t.id, name: t.name }; });
-                    taxRates = data.filter(function(t) { return t.type === 'tax_rate'; }).map(function(t) { return { id: t.id, rate: parseFloat(t.rate) || 0 }; });
-                    renderInvoiceTypes();
+                    taxRates = (data || []).filter(function(t) { return t.type === 'tax_rate'; });
                     renderTaxRates();
                 });
-        }
-        
-        function renderInvoiceTypes() {
-            var container = document.getElementById('invoice-types-list');
-            if (invoiceTypes.length === 0) {
-                container.innerHTML = '<span style="color:#999;">暂无发票类型</span>';
-                return;
-            }
-            container.innerHTML = invoiceTypes.map(function(t) {
-                return '<span class="rate-tag">' + t.name + '<span class="del" onclick="deleteInvoiceType(\'' + t.id + '\')">×</span></span>';
-            }).join('');
         }
         
         function renderTaxRates() {
@@ -251,33 +235,9 @@
                 return;
             }
             container.innerHTML = taxRates.map(function(t) {
-                return '<span class="rate-tag">' + t.rate + '%<span class="del" onclick="deleteTaxRate(\'' + t.id + '\')">×</span></span>';
+                var rate = (parseFloat(t.rate) || 0) * 100;
+                return '<span class="rate-tag">' + rate + '%<span class="del" onclick="deleteTaxRate(\'' + t.id + '\')">×</span></span>';
             }).join('');
-        }
-        
-        function addInvoiceType() {
-            var input = document.getElementById('new-invoice-type');
-            var name = input.value.trim();
-            if (!name) { alert('请输入发票类型名称'); return; }
-            
-            // 检查是否已存在
-            if (invoiceTypes.some(function(t) { return t.name === name; })) {
-                alert('该发票类型已存在');
-                return;
-            }
-            
-            fetch(CLOUD_URL + '/rest/v1/taxsettings', {
-                method: 'POST', headers: hdrs,
-                body: JSON.stringify({ type: 'invoice_type', name: name })
-            }).then(function(r) {
-                if (r.ok) { input.value = ''; loadTaxSettings(); }
-            });
-        }
-        
-        function deleteInvoiceType(id) {
-            if (!confirm('删除该发票类型？')) return;
-            fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + id, { method: 'DELETE', headers: hdrs })
-                .then(function() { loadTaxSettings(); });
         }
         
         function addTaxRate() {
@@ -289,7 +249,7 @@
             }
             
             // 检查是否已存在
-            if (taxRates.some(function(t) { return Math.abs(t.rate - rate) < 0.01; })) {
+            if (taxRates.some(function(t) { return Math.abs(parseFloat(t.rate) * 100 - rate) < 0.01; })) {
                 alert('该税率已存在');
                 return;
             }
@@ -298,14 +258,14 @@
                 method: 'POST', headers: hdrs,
                 body: JSON.stringify({ type: 'tax_rate', rate: rate / 100, name: rate + '%' })
             }).then(function(r) {
-                if (r.ok) { input.value = ''; loadTaxSettings(); }
+                if (r.ok) { input.value = ''; loadTaxRates(); }
             });
         }
         
         function deleteTaxRate(id) {
             if (!confirm('删除该税率点数？')) return;
             fetch(CLOUD_URL + '/rest/v1/taxsettings?id=eq.' + id, { method: 'DELETE', headers: hdrs })
-                .then(function() { loadTaxSettings(); });
+                .then(function() { loadTaxRates(); });
         }
         
         // ========== 数据统计 ==========
@@ -324,7 +284,7 @@
         
         // 初始化
         loadUsers();
-        loadTaxSettings();
+        loadTaxRates();
         loadStats();
     </script>
 </body>

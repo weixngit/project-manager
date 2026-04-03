@@ -271,7 +271,7 @@
         var pageSize = 10;
 
         function syncFromCloud() {
-            fetch(CLOUD_URL + '/rest/v1/projects?company_id=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs })
+            fetch(CLOUD_URL + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(cloudProjects) {
                     if (cloudProjects && cloudProjects.length > 0) {
@@ -279,7 +279,7 @@
                             return { id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' };
                         }));
                     }
-                    return fetch(CLOUD_URL + '/rest/v1/invoices?company_id=eq.' + currentUser.companyId + '&order=date.desc', { headers: hdrs });
+                    return fetch(CLOUD_URL + '/rest/v1/invoices?companyid=eq.' + currentUser.companyId + '&order=date.desc', { headers: hdrs });
                 })
                 .then(function(r) { return r.json(); })
                 .then(function(cloudInvoices) {
@@ -462,7 +462,7 @@
                                     fetch(CLOUD_URL + '/rest/v1/costs', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
-                                        body: JSON.stringify({ id: taxCost.id, project_id: taxCost.projectId, type: taxCost.type, amount: taxCost.amount, date: taxCost.date, remark: taxCost.remark || '', company_id: currentUser.companyId })
+                                        body: JSON.stringify({ id: taxCost.id, project_id: taxCost.projectId, type: taxCost.type, amount: taxCost.amount, date: taxCost.date, remark: taxCost.remark || '', companyid: currentUser.companyId })
                                     }).catch(function(e) {});
                                     
                                     Utils.showToast('添加成功，税费 ¥' + totalTax.toLocaleString() + ' 已计入成本');
@@ -487,7 +487,7 @@
             fetch(CLOUD_URL + '/rest/v1/invoices', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
-                body: JSON.stringify({ id: invoice.id, project_id: invoice.projectId, type: invoice.type, amount: parseFloat(invoice.amount) || 0, number: invoice.number || '', date: invoice.date, party: invoice.party || '', remark: invoice.remark || '', company_id: currentUser.companyId })
+                body: JSON.stringify({ id: invoice.id, project_id: invoice.projectId, type: invoice.type, amount: parseFloat(invoice.amount) || 0, number: invoice.number || '', date: invoice.date, party: invoice.party || '', remark: invoice.remark || '', companyid: currentUser.companyId })
             }).catch(function(e) {});
 
             hideModal();

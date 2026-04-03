@@ -52,7 +52,7 @@
 
         async function syncFromCloud() {
             try {
-                const rp = await fetch(CLOUD.url + '/rest/v1/projects?company_id=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs });
+                const rp = await fetch(CLOUD.url + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs });
                 const projects = await rp.json();
                 if (projects && projects.length > 0) {
                     Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({

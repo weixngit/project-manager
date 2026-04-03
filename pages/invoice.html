@@ -215,9 +215,11 @@
 
             <div class="form-row">
                 <label class="form-label">票据类型</label>
-                <div class="type-grid">
-                    <button class="type-btn selected" data-type="收到" id="type-in">收到</button>
-                    <button class="type-btn" data-type="开出" id="type-out">开出</button>
+                <div class="type-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <button class="type-btn selected" data-type="收到普" id="type-in-pu">收到（普）</button>
+                    <button class="type-btn" data-type="收到专" id="type-in-zh">收到（专）</button>
+                    <button class="type-btn" data-type="开出普" id="type-out-pu">开出（普）</button>
+                    <button class="type-btn" data-type="开出专" id="type-out-zh">开出（专）</button>
                 </div>
             </div>
 
@@ -316,7 +318,7 @@
             var totalIn = 0;
             var totalOut = 0;
             allInvoices.forEach(function(i) {
-                if (i.type === '收到') {
+                if (i.type === '收到普' || i.type === '收到专') {
                     totalIn += parseFloat(i.amount) || 0;
                 } else {
                     totalOut += parseFloat(i.amount) || 0;
@@ -333,14 +335,19 @@
                 return;
             }
 
+            var typeIcons = { '收到普': '📥普', '收到专': '📥专', '开出普': '📤普', '开出专': '📤专' };
+            var typeColors = { '收到普': '#52c41a', '收到专': '#1890ff', '开出普': '#fa8c16', '开出专': '#ff4d4f' };
+            
             var html = '';
             pageInvoices.forEach(function(i) {
                 var project = ProjectStore.getById(i.projectId);
                 var projectName = project ? project.name : '未知项目';
-                var isIn = i.type === '收到';
+                var isIn = i.type === '收到普' || i.type === '收到专';
+                var icon = typeIcons[i.type] || i.type;
+                var color = typeColors[i.type] || '#666';
                 html += '<div class="invoice-item">' +
                     '<div class="invoice-left">' +
-                        '<div class="invoice-project">' + (isIn ? '📥' : '📤') + ' ' + projectName + ' <span style="font-size:11px;color:#666;background:#f0f0f0;padding:2px 6px;border-radius:4px;">' + i.type + '</span></div>' +
+                        '<div class="invoice-project"><span style="color:' + color + ';font-weight:bold;">' + icon + '</span> ' + projectName + ' <span style="font-size:11px;color:#666;background:#f0f0f0;padding:2px 6px;border-radius:4px;">' + i.type + '</span></div>' +
                         '<div class="invoice-info">' + i.date + (i.number ? ' | ' + i.number : '') + (i.party ? ' | ' + i.party : '') + '</div>' +
                     '</div>' +
                     '<div class="invoice-amount ' + (isIn ? 'invoice-in' : 'invoice-out') + '">¥' + parseFloat(i.amount).toLocaleString() + '</div>' +
@@ -374,27 +381,16 @@
             document.getElementById('invoice-party').value = '';
             document.getElementById('invoice-remark').value = '';
             
-            // 根据项目自动选择发票类型
-            var project = ProjectStore.getById(currentProjectId);
-            if (project && project.invoiceType) {
-                // 如果项目是一般纳税人，开票应该选"开出"
-                // 如果是收款方是对方，选"收到"
-                selectedType = '开出'; // 默认开票给甲方
-            } else {
-                selectedType = '收到';
-            }
+            // 默认开出普
+            selectedType = '开出普';
             updateTypeButtons();
             document.getElementById('add-modal').classList.add('show');
         }
         
         function updateTypeButtons() {
-            if (selectedType === '收到') {
-                document.getElementById('type-in').classList.add('selected');
-                document.getElementById('type-out').classList.remove('selected');
-            } else {
-                document.getElementById('type-in').classList.remove('selected');
-                document.getElementById('type-out').classList.add('selected');
-            }
+            document.querySelectorAll('.type-btn').forEach(function(b) { b.classList.remove('selected'); });
+            var btn = document.querySelector('[data-type="' + selectedType + '"]');
+            if (btn) btn.classList.add('selected');
         }
 
         function hideModal() {
@@ -405,61 +401,69 @@
         document.getElementById('cancel-btn').addEventListener('click', hideModal);
         document.getElementById('add-modal').addEventListener('click', function(e) { if (e.target === this) hideModal(); });
 
-        document.getElementById('type-in').addEventListener('click', function() {
-            selectedType = '收到';
-            this.classList.add('selected');
-            document.getElementById('type-out').classList.remove('selected');
-        });
-        document.getElementById('type-out').addEventListener('click', function() {
-            selectedType = '开出';
-            this.classList.add('selected');
-            document.getElementById('type-in').classList.remove('selected');
-        });
+        document.getElementById('type-in-pu').addEventListener('click', function() { selectType('收到普'); });
+        document.getElementById('type-in-zh').addEventListener('click', function() { selectType('收到专'); });
+        document.getElementById('type-out-pu').addEventListener('click', function() { selectType('开出普'); });
+        document.getElementById('type-out-zh').addEventListener('click', function() { selectType('开出专'); });
+        
+        function selectType(type) {
+            selectedType = type;
+            document.querySelectorAll('.type-btn').forEach(function(b) { b.classList.remove('selected'); });
+            document.querySelector('[data-type="' + type + '"]').classList.add('selected');
+        }
 
         document.getElementById('save-btn').addEventListener('click', function() {
             var projectId = document.getElementById('invoice-project').value;
-            var amount = document.getElementById('invoice-amount').value;
+            var amount = parseFloat(document.getElementById('invoice-amount').value) || 0;
             var number = document.getElementById('invoice-number').value;
             var date = document.getElementById('invoice-date').value;
             var party = document.getElementById('invoice-party').value;
             var remark = document.getElementById('invoice-remark').value;
             
             if (!projectId) { Utils.showToast('请选择项目'); return; }
-            if (!amount || parseFloat(amount) <= 0) { Utils.showToast('请输入金额'); return; }
+            if (!amount || amount <= 0) { Utils.showToast('请输入金额'); return; }
             if (!date) { Utils.showToast('请选择日期'); return; }
 
             var invoice = InvoiceStore.add({ projectId: projectId, type: selectedType, amount: amount, number: number, date: date, party: party, remark: remark });
 
-            // 如果是"开出"发票，根据项目税率计算税费
-            if (selectedType === '开出') {
-                var project = ProjectStore.getById(projectId);
-                if (project && project.taxRate) {
-                    var invoiceAmount = parseFloat(amount) || 0;
-                    var taxRate = parseFloat(project.taxRate) || 0;
-                    var totalTax = Math.round(invoiceAmount * taxRate);
-                    
-                    if (totalTax > 0) {
-                        var taxCost = CostStore.add({
-                            projectId: projectId,
-                            type: 'other',
-                            amount: totalTax,
-                            date: date,
-                            remark: '税费（发票' + number + '）'
-                        });
-                        
-                        fetch(CLOUD_URL + '/rest/v1/costs', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
-                            body: JSON.stringify({ id: taxCost.id, project_id: taxCost.projectId, type: taxCost.type, amount: taxCost.amount, date: taxCost.date, remark: taxCost.remark || '', companyid: currentUser.companyId })
-                        }).catch(function(e) {});
-                        
-                        Utils.showToast('添加成功，税费 ¥' + totalTax.toLocaleString() + ' 已计入成本');
-                    } else {
-                        Utils.showToast('添加成功');
-                    }
-                } else {
-                    Utils.showToast('添加成功');
-                }
+            // 计算税费
+            var project = ProjectStore.getById(projectId);
+            var taxRate = project ? (parseFloat(project.taxRate) || 0) : 0;
+            var taxAmount = 0;
+            var taxRemark = '';
+            
+            if (selectedType === '开出普') {
+                // 普通发票：税费 = 开票金额 × 税率
+                taxAmount = Math.round(amount * taxRate);
+                taxRemark = '销项税（普票）';
+            } else if (selectedType === '开出专') {
+                // 专用发票：税费 = (开出金额 - 收到专票金额) × 税率
+                var allInvoices = InvoiceStore.getByProject(projectId);
+                var inputZhAmount = 0;
+                allInvoices.filter(function(i) { return i.type === '收到专'; }).forEach(function(i) { inputZhAmount += parseFloat(i.amount) || 0; });
+                var taxableAmount = Math.max(0, amount - inputZhAmount);
+                taxAmount = Math.round(taxableAmount * taxRate);
+                taxRemark = '销项税（专票）- 进项抵扣 ' + inputZhAmount.toLocaleString();
+            }
+            // 收到普/收到专 不产生税费
+
+            // 如果有税费，添加到成本
+            if (taxAmount > 0) {
+                var taxCost = CostStore.add({
+                    projectId: projectId,
+                    type: 'other',
+                    amount: taxAmount,
+                    date: date,
+                    remark: taxRemark
+                });
+                
+                fetch(CLOUD_URL + '/rest/v1/costs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
+                    body: JSON.stringify({ id: taxCost.id, project_id: taxCost.projectId, type: taxCost.type, amount: taxCost.amount, date: taxCost.date, remark: taxCost.remark || '', companyid: currentUser.companyId })
+                }).catch(function(e) {});
+                
+                Utils.showToast('添加成功，税费 ¥' + taxAmount.toLocaleString() + ' 已计入成本');
             } else {
                 Utils.showToast('添加成功');
             }
@@ -468,7 +472,7 @@
             fetch(CLOUD_URL + '/rest/v1/invoices', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
-                body: JSON.stringify({ id: invoice.id, project_id: invoice.projectId, type: invoice.type, amount: parseFloat(invoice.amount) || 0, number: invoice.number || '', date: invoice.date, party: invoice.party || '', remark: invoice.remark || '', companyid: currentUser.companyId })
+                body: JSON.stringify({ id: invoice.id, project_id: invoice.projectId, type: invoice.type, amount: invoice.amount, number: invoice.number || '', date: invoice.date, party: invoice.party || '', remark: invoice.remark || '', companyid: currentUser.companyId })
             }).catch(function(e) {});
 
             hideModal();

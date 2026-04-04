@@ -1,26 +1,26 @@
-ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>é¡¹ç›®è¯¦æƒ… - å·¥ç¨‹é¡¹ç›®ç®¡ç†</title>
+    <title>ÏîÄ¿ÏêÇé - ¹¤³ÌÏîÄ¿¹ÜÀí</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <div class="app-container">
         <div class="page-header">
-            <a href="project-list.html" class="back-btn">â†</a>
-            <h2 class="page-title" id="project-name">é¡¹ç›®è¯¦æƒ…</h2>
-            <a href="#" id="edit-link" style="margin-left: auto; color: #1890ff; text-decoration: none;">ç¼–è¾‘</a>
+            <a href="project-list.html" class="back-btn">¡û</a>
+            <h2 class="page-title" id="project-name">ÏîÄ¿ÏêÇé</h2>
+            <a href="#" id="edit-link" style="margin-left: auto; color: #1890ff; text-decoration: none;">±à¼­</a>
         </div>
 
-        <div class="main-content" id="content-area"><div class="empty-tip">åŠ è½½ä¸­...</div></div>
+        <div class="main-content" id="content-area"><div class="empty-tip">¼ÓÔØÖĞ...</div></div>
     </div>
 
     <script src="../js/storage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
-        // æ£€æŸ¥ç™»å½•
+        // ¼ì²éµÇÂ¼
         var userStr = localStorage.getItem('pm_user');
         if (!userStr) {
             window.location.href = 'login.html';
@@ -37,27 +37,27 @@
 
         async function syncFromCloud() {
             try {
-                const rp = await fetch(CLOUD.url + '/rest/v1/projects?order=updated_at.desc', { headers: hdrs });
+                const rp = await fetch(CLOUD.url + '/rest/v1/projects?order=updatedat.desc', { headers: hdrs });
                 const projects = await rp.json();
-                if (projects && projects.length > 0) Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({ id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'è¿›è¡Œä¸­', progress: p.progress||0, invoiceType: p.invoice_type||'', taxRate: p.tax_rate||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' }));
+                if (projects && projects.length > 0) Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({ id: p.id, name: p.name, contractAmount: p.contractamount, client: p.client||'', clientContact: p.clientcontact||'', clientPhone: p.clientphone||'', clientAddress: p.clientaddress||'', manager: p.manager||'', managerPhone: p.managerphone||'', startDate: p.startdate||'', endDate: p.enddate||'', status: p.status||'½øĞĞÖĞ', progress: p.progress||0, invoiceType: p.invoicetype||'', taxRate: p.taxrate||'', taxAmount: p.taxamount||0, remark: p.remark||'', createdAt: p.createdat||'', updatedAt: p.updatedat||'' }));
                 
-                const rc = await fetch(CLOUD.url + '/rest/v1/costs?order=created_at.desc', { headers: hdrs });
+                const rc = await fetch(CLOUD.url + '/rest/v1/costs?order=createdat.desc', { headers: hdrs });
                 const costs = await rc.json();
-                if (costs && costs.length > 0) Storage.set(Storage.KEYS.COSTS, costs.map(c => ({ id: c.id, projectId: c.project_id, type: c.type, amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.created_at||'' })));
+                if (costs && costs.length > 0) Storage.set(Storage.KEYS.COSTS, costs.map(c => ({ id: c.id, projectId: c.projectid, type: c.type, amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.createdat||'' })));
                 
-                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?order=expected_date.desc', { headers: hdrs });
+                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?order=expecteddate.desc', { headers: hdrs });
                 const payments = await rpay.json();
-                if (payments && payments.length > 0) Storage.set(Storage.KEYS.PAYMENTS, payments.map(p => ({ id: p.id, projectId: p.project_id, amount: p.amount, type: p.type||'final', expectedDate: p.expected_date||'', actualDate: (p.actual_date && p.actual_date !== 'null') ? p.actual_date : '', status: p.status||'å¾…æ”¶æ¬¾', remark: p.remark||'', createdAt: p.created_at||'' })));
+                if (payments && payments.length > 0) Storage.set(Storage.KEYS.PAYMENTS, payments.map(p => ({ id: p.id, projectId: p.projectid, amount: p.amount, type: p.type||'final', expectedDate: p.expecteddate||'', actualDate: (p.actualdate && p.actualdate !== 'null') ? p.actualdate : '', status: p.status||'´ıÊÕ¿î', remark: p.remark||'', createdAt: p.createdat||'' })));
                 
-                const ri = await fetch(CLOUD.url + '/rest/v1/invoices?order=created_at.desc', { headers: hdrs });
+                const ri = await fetch(CLOUD.url + '/rest/v1/invoices?order=createdat.desc', { headers: hdrs });
                 const invoices = await ri.json();
-                if (invoices && invoices.length > 0) Storage.set(Storage.KEYS.INVOICES, invoices.map(i => ({ id: i.id, projectId: i.project_id, type: i.type, amount: i.amount, number: i.number||'', date: i.date||'', party: i.party||'', remark: i.remark||'', createdAt: i.created_at||'' })));
-            } catch(e) { console.error('åŒæ­¥å¤±è´¥', e); }
+                if (invoices && invoices.length > 0) Storage.set(Storage.KEYS.INVOICES, invoices.map(i => ({ id: i.id, projectId: i.projectid, type: i.type, amount: i.amount, number: i.number||'', date: i.date||'', party: i.party||'', remark: i.remark||'', createdAt: i.createdat||'' })));
+            } catch(e) { console.error('Í¬²½Ê§°Ü', e); }
         }
 
         function renderDetail() {
             const project = ProjectStore.getById(projectId);
-            if (!project) { document.getElementById('content-area').innerHTML = '<div class="empty-tip">é¡¹ç›®ä¸å­˜åœ¨</div>'; return; }
+            if (!project) { document.getElementById('content-area').innerHTML = '<div class="empty-tip">ÏîÄ¿²»´æÔÚ</div>'; return; }
 
             document.getElementById('project-name').textContent = project.name;
             document.getElementById('edit-link').href = 'project-edit.html?id=' + projectId;
@@ -71,34 +71,34 @@
             const payments = PaymentStore.getByProjectId(projectId);
             const isProfit = profit && profit.profit >= 0;
             
-            // è®¡ç®—ç¨è´¹ï¼šé”€é¡¹ç¨ = å¼€å‡ºæ™®Ã—ç¨ç‡ + å¼€å‡ºä¸“Ã—ç¨ç‡ï¼Œè¿›é¡¹æŠµæ‰£ = æ”¶åˆ°ä¸“Ã—ç¨ç‡
+            // ¼ÆËãË°·Ñ£ºÏúÏîË° = ¿ª³öÆÕ¡ÁË°ÂÊ + ¿ª³ö×¨¡ÁË°ÂÊ£¬½øÏîµÖ¿Û = ÊÕµ½×¨¡ÁË°ÂÊ
             const taxRate = parseFloat(project.taxRate) || 0;
             const outputTax = (invoiceStats.outputPu + invoiceStats.outputZh) * taxRate;
             const inputTax = invoiceStats.inputZh * taxRate;
             const taxCalc = Math.round(outputTax - inputTax);
 
-            const typeLabels = { labor: 'äººå·¥åˆ†åŒ…', material: 'è®¾å¤‡ææ–™', business: 'å•†åŠ¡è´¹', machinery: 'æœºæ¢°ç§Ÿèµ', transport: 'äº¤é€šè´¹', other: 'æ‚è´¹' };
+            const typeLabels = { labor: 'ÈË¹¤·Ö°ü', material: 'Éè±¸²ÄÁÏ', business: 'ÉÌÎñ·Ñ', machinery: '»úĞµ×âÁŞ', transport: '½»Í¨·Ñ', other: 'ÔÓ·Ñ' };
 
             const html = `
                 <div class="card">
-                    <h3 style="margin-bottom:12px;">ç›ˆäºæ¦‚è§ˆ</h3>
+                    <h3 style="margin-bottom:12px;">Ó¯¿÷¸ÅÀÀ</h3>
                     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-                        <div><div style="font-size:12px;color:#999;">åˆåŒé‡‘é¢</div><div class="amount amount-medium">${Utils.formatMoney(project.contractAmount)}</div></div>
-                        <div><div style="font-size:12px;color:#999;">å·²å›æ¬¾</div><div class="amount amount-medium">${Utils.formatMoney(totalPaid)}</div></div>
-                        <div><div style="font-size:12px;color:#999;">æ€»æˆæœ¬</div><div class="amount" style="color:#ff4d4f;">${Utils.formatMoney(profit ? profit.totalCost : 0)}</div></div>
-                        <div><div style="font-size:12px;color:#999;">å¾…å›æ¬¾</div><div class="amount" style="color:#faad14;">${Utils.formatMoney((project.contractAmount||0) - totalPaid)}</div></div>
+                        <div><div style="font-size:12px;color:#999;">ºÏÍ¬½ğ¶î</div><div class="amount amount-medium">${Utils.formatMoney(project.contractAmount)}</div></div>
+                        <div><div style="font-size:12px;color:#999;">ÒÑ»Ø¿î</div><div class="amount amount-medium">${Utils.formatMoney(totalPaid)}</div></div>
+                        <div><div style="font-size:12px;color:#999;">×Ü³É±¾</div><div class="amount" style="color:#ff4d4f;">${Utils.formatMoney(profit ? profit.totalCost : 0)}</div></div>
+                        <div><div style="font-size:12px;color:#999;">´ı»Ø¿î</div><div class="amount" style="color:#faad14;">${Utils.formatMoney((project.contractAmount||0) - totalPaid)}</div></div>
                     </div>
                     <div style="margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0;">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <span style="font-size:14px;font-weight:600;">å‡€åˆ©æ¶¦</span>
-                            <span class="amount amount-large" style="color:${isProfit ? '#52c41a' : '#ff4d4f'};">${profit ? Utils.formatMoney(Math.abs(profit.profit)) : 'Â¥0'}${isProfit ? '' : ' (äº)'}</span>
+                            <span style="font-size:14px;font-weight:600;">¾»ÀûÈó</span>
+                            <span class="amount amount-large" style="color:${isProfit ? '#52c41a' : '#ff4d4f'};">${profit ? Utils.formatMoney(Math.abs(profit.profit)) : '£¤0'}${isProfit ? '' : ' (¿÷)'}</span>
                         </div>
-                        <div style="font-size:12px;color:#999;margin-top:4px;">åˆ©æ¶¦ç‡: ${profit ? profit.profitRate : 0}%</div>
+                        <div style="font-size:12px;color:#999;margin-top:4px;">ÀûÈóÂÊ: ${profit ? profit.profitRate : 0}%</div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h3 style="margin-bottom:12px;">é¡¹ç›®è¿›åº¦</h3>
+                    <h3 style="margin-bottom:12px;">ÏîÄ¿½ø¶È</h3>
                     <div class="progress-bar" style="height:12px;"><div class="progress-fill" style="width:${project.progress||0}%;"></div></div>
                     <div style="display:flex;justify-content:space-between;margin-top:8px;">
                         <span class="tag ${Utils.getStatusTag(project.status)}">${project.status}</span>
@@ -108,64 +108,64 @@
 
                 <div class="card">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <h3>æˆæœ¬åˆ†å¸ƒ</h3>
-                        <a href="cost-record.html?projectId=${projectId}" style="font-size:13px;color:#1890ff;text-decoration:none;">è®°å½•æˆæœ¬ â†’</a>
+                        <h3>³É±¾·Ö²¼</h3>
+                        <a href="cost-record.html?projectId=${projectId}" style="font-size:13px;color:#1890ff;text-decoration:none;">¼ÇÂ¼³É±¾ ¡ú</a>
                     </div>
-                    ${Object.keys(costStats).length === 0 ? '<div style="text-align:center;color:#999;padding:20px;">æš‚æ— æˆæœ¬è®°å½•</div>' : Object.entries(costStats).map(([t, a]) => '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;"><span style="font-size:13px;">' + (typeLabels[t]||t) + '</span><span style="font-size:13px;color:#ff4d4f;">' + Utils.formatMoney(a) + '</span></div>').join('')}
+                    ${Object.keys(costStats).length === 0 ? '<div style="text-align:center;color:#999;padding:20px;">ÔİÎŞ³É±¾¼ÇÂ¼</div>' : Object.entries(costStats).map(([t, a]) => '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;"><span style="font-size:13px;">' + (typeLabels[t]||t) + '</span><span style="font-size:13px;color:#ff4d4f;">' + Utils.formatMoney(a) + '</span></div>').join('')}
                 </div>
 
                 <div class="card">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <h3>å›æ¬¾æƒ…å†µ</h3>
-                        <a href="payment.html?projectId=${projectId}" style="font-size:13px;color:#1890ff;text-decoration:none;">ç®¡ç†å›æ¬¾ â†’</a>
+                        <h3>»Ø¿îÇé¿ö</h3>
+                        <a href="payment.html?projectId=${projectId}" style="font-size:13px;color:#1890ff;text-decoration:none;">¹ÜÀí»Ø¿î ¡ú</a>
                     </div>
                     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-                        <div style="background:#f6ffed;padding:12px;border-radius:8px;"><div style="font-size:12px;color:#52c41a;">å·²æ”¶æ¬¾</div><div class="amount">${Utils.formatMoney(totalPaid)}</div></div>
-                        <div style="background:#fff7e6;padding:12px;border-radius:8px;"><div style="font-size:12px;color:#faad14;">å¾…æ”¶æ¬¾</div><div class="amount">${Utils.formatMoney(totalPending)}</div></div>
+                        <div style="background:#f6ffed;padding:12px;border-radius:8px;"><div style="font-size:12px;color:#52c41a;">ÒÑÊÕ¿î</div><div class="amount">${Utils.formatMoney(totalPaid)}</div></div>
+                        <div style="background:#fff7e6;padding:12px;border-radius:8px;"><div style="font-size:12px;color:#faad14;">´ıÊÕ¿î</div><div class="amount">${Utils.formatMoney(totalPending)}</div></div>
                     </div>
                 </div>
 
                 <div class="card">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <h3>ç¥¨æ®æ±‡æ€»</h3>
-                        <a href="invoice.html?projectId=${projectId}" style="font-size:13px;color:#1890ff;text-decoration:none;">ç®¡ç†ç¥¨æ® â†’</a>
+                        <h3>Æ±¾İ»ã×Ü</h3>
+                        <a href="invoice.html?projectId=${projectId}" style="font-size:13px;color:#1890ff;text-decoration:none;">¹ÜÀíÆ±¾İ ¡ú</a>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-                        <div style="background:#f6ffed;padding:10px;border-radius:6px;text-align:center;"><div style="font-size:11px;color:#52c41a;">æ”¶åˆ°ç¥¨æ®</div><div class="amount" style="color:#52c41a;">${Utils.formatMoney(invoiceStats.inputAmount)}</div></div>
-                        <div style="background:#fff7e6;padding:10px;border-radius:6px;text-align:center;"><div style="font-size:11px;color:#fa8c16;">å¼€å‡ºç¥¨æ®</div><div class="amount" style="color:#fa8c16;">${Utils.formatMoney(invoiceStats.outputAmount)}</div></div>
+                        <div style="background:#f6ffed;padding:10px;border-radius:6px;text-align:center;"><div style="font-size:11px;color:#52c41a;">ÊÕµ½Æ±¾İ</div><div class="amount" style="color:#52c41a;">${Utils.formatMoney(invoiceStats.inputAmount)}</div></div>
+                        <div style="background:#fff7e6;padding:10px;border-radius:6px;text-align:center;"><div style="font-size:11px;color:#fa8c16;">¿ª³öÆ±¾İ</div><div class="amount" style="color:#fa8c16;">${Utils.formatMoney(invoiceStats.outputAmount)}</div></div>
                     </div>
                     <div style="font-size:12px;color:#666;line-height:1.8;">
-                        <div>æ”¶åˆ°æ™®ç¥¨: ${Utils.formatMoney(invoiceStats.inputPu)} | æ”¶åˆ°ä¸“ç¥¨: ${Utils.formatMoney(invoiceStats.inputZh)}</div>
-                        <div>å¼€å‡ºæ™®ç¥¨: ${Utils.formatMoney(invoiceStats.outputPu)} | å¼€å‡ºä¸“ç¥¨: ${Utils.formatMoney(invoiceStats.outputZh)}</div>
+                        <div>ÊÕµ½ÆÕÆ±: ${Utils.formatMoney(invoiceStats.inputPu)} | ÊÕµ½×¨Æ±: ${Utils.formatMoney(invoiceStats.inputZh)}</div>
+                        <div>¿ª³öÆÕÆ±: ${Utils.formatMoney(invoiceStats.outputPu)} | ¿ª³ö×¨Æ±: ${Utils.formatMoney(invoiceStats.outputZh)}</div>
                     </div>
                 </div>
 
                 <div class="card" style="background:#e6f7ff;border-left:3px solid #1890ff;">
-                    <h3 style="margin-bottom:12px;">ğŸ’° è´¢åŠ¡ä¼°ç®—</h3>
+                    <h3 style="margin-bottom:12px;">?? ²ÆÎñ¹ÀËã</h3>
                     <div style="font-size:13px;line-height:2;">
-                        <div style="display:flex;justify-content:space-between;"><span>å‘ç¥¨ç¨è´¹:</span><span style="color:#ff4d4f;">${Utils.formatMoney(taxCalc)}</span></div>
-                        <div style="display:flex;justify-content:space-between;"><span>å·²æ”¶æ¬¾:</span><span style="color:#52c41a;">${Utils.formatMoney(totalPaid)}</span></div>
-                        <div style="display:flex;justify-content:space-between;"><span>æ€»æ”¯å‡º:</span><span style="color:#ff4d4f;">${Utils.formatMoney(profit ? profit.totalCost : 0)}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>·¢Æ±Ë°·Ñ:</span><span style="color:#ff4d4f;">${Utils.formatMoney(taxCalc)}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>ÒÑÊÕ¿î:</span><span style="color:#52c41a;">${Utils.formatMoney(totalPaid)}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>×ÜÖ§³ö:</span><span style="color:#ff4d4f;">${Utils.formatMoney(profit ? profit.totalCost : 0)}</span></div>
                     </div>
                     <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #1890ff;">
                         <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:600;">
-                            <span>é¢„ä¼°åˆ©æ¶¦:</span>
+                            <span>Ô¤¹ÀÀûÈó:</span>
                             <span style="color:${isProfit ? '#52c41a' : '#ff4d4f'};">${Utils.formatMoney(profit ? (profit.profit - taxCalc) : 0)}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h3 style="margin-bottom:12px;">é¡¹ç›®ä¿¡æ¯</h3>
+                    <h3 style="margin-bottom:12px;">ÏîÄ¿ĞÅÏ¢</h3>
                     <div style="font-size:14px;color:#666;line-height:2;">
-                        <div><strong>ç”²æ–¹ï¼š</strong>${project.client||'-'}</div>
-                        <div><strong>è”ç³»äººï¼š</strong>${project.clientContact||'-'} ${project.clientPhone?'('+project.clientPhone+')':''}</div>
-                        <div><strong>è´Ÿè´£äººï¼š</strong>${project.manager||'-'} ${project.managerPhone?'('+project.managerPhone+')':''}</div>
-                        <div><strong>å‘ç¥¨ç±»å‹ï¼š</strong>${project.invoiceType||'-'}</div>
-                        <div><strong>ç¨ç‡ï¼š</strong>${project.taxRate?(parseFloat(project.taxRate)*100)+'%':'-'}</div>
-                        <div><strong>é¢„è®¡ç¨è´¹ï¼š</strong>${Utils.formatMoney(project.taxAmount)}</div>
-                        <div><strong>å¼€å§‹/ç»“æŸï¼š</strong>${project.startDate||'-'} / ${project.endDate||'-'}</div>
-                        ${project.remark?'<div><strong>å¤‡æ³¨ï¼š</strong>'+project.remark+'</div>':''}
+                        <div><strong>¼×·½£º</strong>${project.client||'-'}</div>
+                        <div><strong>ÁªÏµÈË£º</strong>${project.clientContact||'-'} ${project.clientPhone?'('+project.clientPhone+')':''}</div>
+                        <div><strong>¸ºÔğÈË£º</strong>${project.manager||'-'} ${project.managerPhone?'('+project.managerPhone+')':''}</div>
+                        <div><strong>·¢Æ±ÀàĞÍ£º</strong>${project.invoiceType||'-'}</div>
+                        <div><strong>Ë°ÂÊ£º</strong>${project.taxRate?(parseFloat(project.taxRate)*100)+'%':'-'}</div>
+                        <div><strong>Ô¤¼ÆË°·Ñ£º</strong>${Utils.formatMoney(project.taxAmount)}</div>
+                        <div><strong>¿ªÊ¼/½áÊø£º</strong>${project.startDate||'-'} / ${project.endDate||'-'}</div>
+                        ${project.remark?'<div><strong>±¸×¢£º</strong>'+project.remark+'</div>':''}
                     </div>
                 </div>
             `;

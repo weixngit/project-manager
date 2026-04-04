@@ -9,33 +9,32 @@
 <body>
     <div class="app-container">
         <div class="page-header">
-            <a href="../index.html" class="back-btn">←</a>
+            <a href="../index.html" class="back-btn">�?/a>
             <h2 class="page-title">盈亏报表</h2>
         </div>
 
         <div style="padding:16px;background:linear-gradient(135deg,#1890ff,#40a9ff);color:#fff;">
             <div style="text-align:center;">
-                <div style="font-size:14px;opacity:0.9;">总利润</div>
+                <div style="font-size:14px;opacity:0.9;">总利�?/div>
                 <div class="amount" style="font-size:36px;font-weight:700;" id="total-profit">¥0</div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;">
                 <div style="text-align:center;"><div style="font-size:12px;opacity:0.9;">合同总额</div><div style="font-size:18px;font-weight:600;" id="total-contract">¥0</div></div>
-                <div style="text-align:center;"><div style="font-size:12px;opacity:0.9;">总成本</div><div style="font-size:18px;font-weight:600;" id="total-cost">¥0</div></div>
-                <div style="text-align:center;"><div style="font-size:12px;opacity:0.9;">项目数</div><div style="font-size:18px;font-weight:600;" id="total-projects">0</div></div>
+                <div style="text-align:center;"><div style="font-size:12px;opacity:0.9;">总成�?/div><div style="font-size:18px;font-weight:600;" id="total-cost">¥0</div></div>
+                <div style="text-align:center;"><div style="font-size:12px;opacity:0.9;">项目�?/div><div style="font-size:18px;font-weight:600;" id="total-projects">0</div></div>
             </div>
         </div>
 
         <div class="main-content">
-            <h3 style="font-size:16px;margin-bottom:12px;">各项目盈亏</h3>
-            <div id="report-list"><div class="empty-tip">加载中...</div></div>
+            <h3 style="font-size:16px;margin-bottom:12px;">各项目盈�?/h3>
+            <div id="report-list"><div class="empty-tip">加载�?..</div></div>
         </div>
     </div>
 
     <script src="../js/storage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
-        // 检查登录
-        var userStr = localStorage.getItem('pm_user');
+        // 检查登�?        var userStr = localStorage.getItem('pm_user');
         if (!userStr) { window.location.href = 'login.html'; }
         var currentUser = JSON.parse(userStr);
         
@@ -44,17 +43,17 @@
 
         async function syncFromCloud() {
             try {
-                const rp = await fetch(CLOUD.url + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs });
+                const rp = await fetch(CLOUD.url + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updatedat.desc', { headers: hdrs });
                 const projects = await rp.json();
-                if (projects && projects.length > 0) Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({ id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxRate: p.tax_rate||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' })));
+                if (projects && projects.length > 0) Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({ id: p.id, name: p.name, contractAmount: p.contractamount, client: p.client||'', clientContact: p.clientcontact||'', clientPhone: p.clientphone||'', clientAddress: p.clientaddress||'', manager: p.manager||'', managerPhone: p.managerphone||'', startDate: p.startdate||'', endDate: p.enddate||'', status: p.status||'进行�?, progress: p.progress||0, invoiceType: p.invoicetype||'', taxRate: p.taxrate||'', taxAmount: p.taxamount||0, remark: p.remark||'', createdAt: p.createdat||'', updatedAt: p.updatedat||'' })));
                 
-                const rc = await fetch(CLOUD.url + '/rest/v1/costs?companyid=eq.' + currentUser.companyId + '&order=created_at.desc', { headers: hdrs });
+                const rc = await fetch(CLOUD.url + '/rest/v1/costs?companyid=eq.' + currentUser.companyId + '&order=createdat.desc', { headers: hdrs });
                 const costs = await rc.json();
-                if (costs && costs.length > 0) Storage.set(Storage.KEYS.COSTS, costs.map(c => ({ id: c.id, projectId: c.project_id, type: c.type, amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.created_at||'' })));
+                if (costs && costs.length > 0) Storage.set(Storage.KEYS.COSTS, costs.map(c => ({ id: c.id, projectId: c.projectid, type: c.type, amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.createdat||'' })));
                 
-                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?companyid=eq.' + currentUser.companyId + '&order=expected_date.desc', { headers: hdrs });
+                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?companyid=eq.' + currentUser.companyId + '&order=expecteddate.desc', { headers: hdrs });
                 const payments = await rpay.json();
-                if (payments && payments.length > 0) Storage.set(Storage.KEYS.PAYMENTS, payments.map(p => ({ id: p.id, projectId: p.project_id, amount: p.amount, type: p.type||'final', expectedDate: p.expected_date||'', actualDate: (p.actual_date && p.actual_date !== 'null') ? p.actual_date : '', remark: p.remark||'', createdAt: p.created_at||'' })));
+                if (payments && payments.length > 0) Storage.set(Storage.KEYS.PAYMENTS, payments.map(p => ({ id: p.id, projectId: p.projectid, amount: p.amount, type: p.type||'final', expectedDate: p.expecteddate||'', actualDate: (p.actualdate && p.actualdate !== 'null') ? p.actualdate : '', remark: p.remark||'', createdAt: p.createdat||'' })));
             } catch(e) { console.error('同步失败', e); }
         }
 

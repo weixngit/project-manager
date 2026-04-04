@@ -184,7 +184,7 @@
 <body>
     <div class="app-container">
         <div class="page-header">
-            <a href="../index.html" class="back-btn">←</a>
+            <a href="../index.html" class="back-btn">�?/a>
             <h2 class="page-title">成本记录</h2>
         </div>
 
@@ -218,12 +218,10 @@
                     </button>
                     <button class="type-btn" data-type="material">
                         <span class="icon">📦</span>
-                        材料费
-                    </button>
+                        材料�?                    </button>
                     <button class="type-btn" data-type="business">
                         <span class="icon">🤝</span>
-                        商务费
-                    </button>
+                        商务�?                    </button>
                     <button class="type-btn" data-type="machinery">
                         <span class="icon">🚜</span>
                         机械租赁
@@ -241,7 +239,7 @@
             </div>
 
             <div style="margin-bottom:16px;">
-                <label style="font-size:12px;color:#666;margin-bottom:8px;display:block;">金额（元）</label>
+                <label style="font-size:12px;color:#666;margin-bottom:8px;display:block;">金额（元�?/label>
                 <input type="number" id="cost-amount" class="amount-input" placeholder="0.00" step="0.01">
             </div>
 
@@ -251,7 +249,7 @@
             </div>
 
             <div style="margin-bottom:16px;">
-                <label style="font-size:12px;color:#666;margin-bottom:8px;display:block;">备注（选填）</label>
+                <label style="font-size:12px;color:#666;margin-bottom:8px;display:block;">备注（选填�?/label>
                 <input type="text" id="cost-remark" class="form-input" placeholder="输入备注" style="font-size:16px;padding:12px;">
             </div>
 
@@ -263,8 +261,7 @@
     <script src="../js/storage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
-        // 检查登录
-        var userStr = localStorage.getItem('pm_user');
+        // 检查登�?        var userStr = localStorage.getItem('pm_user');
         if (!userStr) {
             window.location.href = 'login.html';
         }
@@ -280,12 +277,12 @@
         var pageSize = 10;
 
         function syncFromCloud() {
-            fetch(CLOUD_URL + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs })
+            fetch(CLOUD_URL + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updatedat.desc', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(cloudProjects) {
                     if (cloudProjects && cloudProjects.length > 0) {
                         Storage.set(Storage.KEYS.PROJECTS, cloudProjects.map(function(p) {
-                            return { id: p.id, name: p.name, contractAmount: p.contract_amount, client: p.client||'', clientContact: p.client_contact||'', clientPhone: p.client_phone||'', clientAddress: p.client_address||'', manager: p.manager||'', managerPhone: p.manager_phone||'', startDate: p.start_date||'', endDate: p.end_date||'', status: p.status||'进行中', progress: p.progress||0, invoiceType: p.invoice_type||'', taxRate: p.tax_rate||'', taxAmount: p.tax_amount||0, remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||'' };
+                            return { id: p.id, name: p.name, contractAmount: p.contractamount, client: p.client||'', clientContact: p.clientcontact||'', clientPhone: p.clientphone||'', clientAddress: p.clientaddress||'', manager: p.manager||'', managerPhone: p.managerphone||'', startDate: p.startdate||'', endDate: p.enddate||'', status: p.status||'进行�?, progress: p.progress||0, invoiceType: p.invoicetype||'', taxRate: p.taxrate||'', taxAmount: p.taxamount||0, remark: p.remark||'', createdAt: p.createdat||'', updatedAt: p.updatedat||'' };
                         }));
                     }
                     return fetch(CLOUD_URL + '/rest/v1/costs?companyid=eq.' + currentUser.companyId + '&order=date.desc', { headers: hdrs });
@@ -294,7 +291,7 @@
                 .then(function(cloudCosts) {
                     if (cloudCosts && cloudCosts.length > 0) {
                         Storage.set(Storage.KEYS.COSTS, cloudCosts.map(function(c) {
-                            return { id: c.id, projectId: c.project_id, type: c.type, amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.created_at||'' };
+                            return { id: c.id, projectId: c.projectid, type: c.type, amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.createdat||'' };
                         }));
                     }
                     loadProjects();
@@ -330,14 +327,14 @@
             var pageCosts = allCosts.slice(start, start + pageSize);
 
             if (allCosts.length === 0) {
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p style="font-size:48px;margin-bottom:12px;">📝</p><p>暂无成本记录</p><p style="font-size:12px;margin-top:8px;">点击右下角 + 添加</p></div>';
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><p style="font-size:48px;margin-bottom:12px;">📝</p><p>暂无成本记录</p><p style="font-size:12px;margin-top:8px;">点击右下�?+ 添加</p></div>';
                 addBtn.style.display = 'block';
                 return;
             }
 
             addBtn.style.display = 'block';
             
-            var typeLabels = { labor: '人工分包', material: '设备材料', business: '商务费', machinery: '机械租赁', transport: '交通费', other: '杂费' };
+            var typeLabels = { labor: '人工分包', material: '设备材料', business: '商务�?, machinery: '机械租赁', transport: '交通费', other: '杂费' };
             var typeIcons = { labor: '👷', material: '📦', business: '🤝', machinery: '🚜', transport: '🚗', other: '📋' };
 
             var html = '';
@@ -358,15 +355,14 @@
             // 分页
             if (totalPages > 1) {
                 html += '<div class="pagination">' +
-                    '<button class="page-btn" onclick="prevPage()" ' + (currentPage <= 1 ? 'disabled' : '') + '>上一页</button>' +
+                    '<button class="page-btn" onclick="prevPage()" ' + (currentPage <= 1 ? 'disabled' : '') + '>上一�?/button>' +
                     '<span class="page-info">' + currentPage + ' / ' + totalPages + '</span>' +
-                    '<button class="page-btn" onclick="nextPage()" ' + (currentPage >= totalPages ? 'disabled' : '') + '>下一页</button>' +
+                    '<button class="page-btn" onclick="nextPage()" ' + (currentPage >= totalPages ? 'disabled' : '') + '>下一�?/button>' +
                 '</div>';
             }
             
-            // 合计行
-            html += '<div class="cost-total">' +
-                '<span class="cost-total-label">合计 (' + allCosts.length + '条)</span>' +
+            // 合计�?            html += '<div class="cost-total">' +
+                '<span class="cost-total-label">合计 (' + allCosts.length + '�?</span>' +
                 '<span class="cost-total-amount">¥' + totalCost.toLocaleString() + '</span>' +
             '</div>';
             
@@ -404,8 +400,8 @@
                 this.style.background = '#1890ff';
                 this.style.color = '#fff';
                 this.style.borderColor = '#1890ff';
-                var labels = { labor: '人工分包', material: '设备材料', business: '商务费', machinery: '机械租赁', transport: '交通费', other: '杂费' };
-                document.getElementById('selected-type').textContent = '已选: ' + (labels[selectedType]||'');
+                var labels = { labor: '人工分包', material: '设备材料', business: '商务�?, machinery: '机械租赁', transport: '交通费', other: '杂费' };
+                document.getElementById('selected-type').textContent = '已�? ' + (labels[selectedType]||'');
             });
         });
 
@@ -419,7 +415,7 @@
             var remark = document.getElementById('cost-remark').value;
             
             if (!selectedType) { Utils.showToast('请选择成本类型'); return; }
-            if (!amount || parseFloat(amount) <= 0) { Utils.showToast('请输入金额'); return; }
+            if (!amount || parseFloat(amount) <= 0) { Utils.showToast('请输入金�?); return; }
             if (!date) { Utils.showToast('请选择日期'); return; }
 
             var cost = CostStore.add({ projectId: currentProjectId, type: selectedType, amount: amount, date: date, remark: remark });
@@ -427,7 +423,7 @@
             fetch(CLOUD_URL + '/rest/v1/costs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'resolution=merge-duplicates' },
-                body: JSON.stringify({ id: cost.id, project_id: cost.projectId, type: cost.type, amount: parseFloat(cost.amount) || 0, date: cost.date, remark: cost.remark || '', companyid: currentUser.companyId })
+                body: JSON.stringify({ id: cost.id, projectid: cost.projectId, type: cost.type, amount: parseFloat(cost.amount) || 0, date: cost.date, remark: cost.remark || '', companyid: currentUser.companyId })
             }).catch(function(e) {});
 
             Utils.showToast('记录成功');
@@ -436,10 +432,10 @@
         });
 
         function deleteCost(id) {
-            if (confirm('确定要删除这条记录吗？')) {
+            if (confirm('确定要删除这条记录吗�?)) {
                 CostStore.delete(id);
                 fetch(CLOUD_URL + '/rest/v1/costs?id=eq.' + id, { method: 'DELETE', headers: hdrs }).catch(function(e) {});
-                Utils.showToast('已删除');
+                Utils.showToast('已删�?);
                 loadCosts();
             }
         }

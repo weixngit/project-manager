@@ -9,7 +9,7 @@
 <body>
     <div class="app-container">
         <div class="page-header">
-            <a href="../index.html" class="back-btn">←</a>
+            <a href="../index.html" class="back-btn">�?/a>
             <h2 class="page-title">项目列表</h2>
         </div>
 
@@ -19,13 +19,13 @@
 
         <div style="padding: 8px 16px; background: #fff; display: flex; gap: 8px; overflow-x: auto;">
             <button class="filter-btn active" data-status="all">全部</button>
-            <button class="filter-btn" data-status="进行中">进行中</button>
-            <button class="filter-btn" data-status="已完成">已完成</button>
-            <button class="filter-btn" data-status="已暂停">已暂停</button>
+            <button class="filter-btn" data-status="进行�?>进行�?/button>
+            <button class="filter-btn" data-status="已完�?>已完�?/button>
+            <button class="filter-btn" data-status="已暂�?>已暂�?/button>
         </div>
 
         <div class="main-content" style="padding-top: 8px;">
-            <div id="project-list"><div class="empty-tip">加载中...</div></div>
+            <div id="project-list"><div class="empty-tip">加载�?..</div></div>
         </div>
 
         <button class="fab" onclick="location.href='project-edit.html'">+</button>
@@ -34,8 +34,7 @@
     <script src="../js/storage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
-        // 检查登录
-        const userStr = localStorage.getItem('pm_user');
+        // 检查登�?        const userStr = localStorage.getItem('pm_user');
         if (!userStr) {
             window.location.href = 'login.html';
         }
@@ -52,37 +51,37 @@
 
         async function syncFromCloud() {
             try {
-                const rp = await fetch(CLOUD.url + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updated_at.desc', { headers: hdrs });
+                const rp = await fetch(CLOUD.url + '/rest/v1/projects?companyid=eq.' + currentUser.companyId + '&order=updatedat.desc', { headers: hdrs });
                 const projects = await rp.json();
                 if (projects && projects.length > 0) {
                     Storage.set(Storage.KEYS.PROJECTS, projects.map(p => ({
-                        id: p.id, name: p.name, contractAmount: p.contract_amount,
-                        client: p.client||'', clientContact: p.client_contact||'',
-                        clientPhone: p.client_phone||'', clientAddress: p.client_address||'',
-                        manager: p.manager||'', managerPhone: p.manager_phone||'',
-                        startDate: p.start_date||'', endDate: p.end_date||'',
-                        status: p.status||'进行中', progress: p.progress||0,
-                        invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0,
-                        remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||''
+                        id: p.id, name: p.name, contractAmount: p.contractamount,
+                        client: p.client||'', clientContact: p.clientcontact||'',
+                        clientPhone: p.clientphone||'', clientAddress: p.clientaddress||'',
+                        manager: p.manager||'', managerPhone: p.managerphone||'',
+                        startDate: p.startdate||'', endDate: p.enddate||'',
+                        status: p.status||'进行�?, progress: p.progress||0,
+                        invoiceType: p.invoicetype||'', taxAmount: p.taxamount||0,
+                        remark: p.remark||'', createdAt: p.createdat||'', updatedAt: p.updatedat||''
                     })));
                 }
                 
-                const rc = await fetch(CLOUD.url + '/rest/v1/costs?order=created_at.desc', { headers: hdrs });
+                const rc = await fetch(CLOUD.url + '/rest/v1/costs?order=createdat.desc', { headers: hdrs });
                 const costs = await rc.json();
                 if (costs && costs.length > 0) {
                     Storage.set(Storage.KEYS.COSTS, costs.map(c => ({
-                        id: c.id, projectId: c.project_id, type: c.type,
-                        amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.created_at||''
+                        id: c.id, projectId: c.projectid, type: c.type,
+                        amount: c.amount, date: c.date||'', remark: c.remark||'', createdAt: c.createdat||''
                     })));
                 }
                 
-                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?order=expected_date.desc', { headers: hdrs });
+                const rpay = await fetch(CLOUD.url + '/rest/v1/payments?order=expecteddate.desc', { headers: hdrs });
                 const payments = await rpay.json();
                 if (payments && payments.length > 0) {
                     Storage.set(Storage.KEYS.PAYMENTS, payments.map(p => ({
-                        id: p.id, projectId: p.project_id, amount: p.amount, type: p.type||'final',
-                        expectedDate: p.expected_date||'', actualDate: (p.actual_date && p.actual_date !== 'null') ? p.actual_date : '',
-                        remark: p.remark||'', createdAt: p.created_at||''
+                        id: p.id, projectId: p.projectid, amount: p.amount, type: p.type||'final',
+                        expectedDate: p.expecteddate||'', actualDate: (p.actualdate && p.actualdate !== 'null') ? p.actualdate : '',
+                        remark: p.remark||'', createdAt: p.createdat||''
                     })));
                 }
             } catch(e) { console.error('同步失败', e); }
@@ -92,11 +91,9 @@
             const container = document.getElementById('project-list');
             let projects = ProjectStore.getAll();
             
-            // 先显示本地数据（立即可用）
-            renderProjects(projects);
+            // 先显示本地数据（立即可用�?            renderProjects(projects);
             
-            // 然后从云端获取数据进行合并
-            fetch(CLOUD.url + '/rest/v1/projects?order=updated_at.desc', { headers: hdrs })
+            // 然后从云端获取数据进行合�?            fetch(CLOUD.url + '/rest/v1/projects?order=updatedat.desc', { headers: hdrs })
                 .then(function(r) { return r.json(); })
                 .then(function(cloudProjects) {
                     if (cloudProjects && cloudProjects.length > 0) {
@@ -107,14 +104,14 @@
                         if (newProjects.length > 0) {
                             var newLocal = newProjects.map(function(p) {
                                 return {
-                                    id: p.id, name: p.name, contractAmount: p.contract_amount,
-                                    client: p.client||'', clientContact: p.client_contact||'',
-                                    clientPhone: p.client_phone||'', clientAddress: p.client_address||'',
-                                    manager: p.manager||'', managerPhone: p.manager_phone||'',
-                                    startDate: p.start_date||'', endDate: p.end_date||'',
-                                    status: p.status||'进行中', progress: p.progress||0,
-                                    invoiceType: p.invoice_type||'', taxAmount: p.tax_amount||0,
-                                    remark: p.remark||'', createdAt: p.created_at||'', updatedAt: p.updated_at||''
+                                    id: p.id, name: p.name, contractAmount: p.contractamount,
+                                    client: p.client||'', clientContact: p.clientcontact||'',
+                                    clientPhone: p.clientphone||'', clientAddress: p.clientaddress||'',
+                                    manager: p.manager||'', managerPhone: p.managerphone||'',
+                                    startDate: p.startdate||'', endDate: p.enddate||'',
+                                    status: p.status||'进行�?, progress: p.progress||0,
+                                    invoiceType: p.invoicetype||'', taxAmount: p.taxamount||0,
+                                    remark: p.remark||'', createdAt: p.createdat||'', updatedAt: p.updatedat||''
                                 };
                             });
                             
@@ -133,7 +130,7 @@
             if (searchKeyword) projects = projects.filter(p => p.name.includes(searchKeyword) || (p.client && p.client.includes(searchKeyword)));
 
             if (projects.length === 0) {
-                container.innerHTML = '<div class="empty-tip"><p style="font-size:48px;margin-bottom:16px;">📁</p><p>暂无项目</p><p style="font-size:12px;color:#999;margin-top:8px;">点击右下角 + 新建项目</p></div>';
+                container.innerHTML = '<div class="empty-tip"><p style="font-size:48px;margin-bottom:16px;">📁</p><p>暂无项目</p><p style="font-size:12px;color:#999;margin-top:8px;">点击右下�?+ 新建项目</p></div>';
                 return;
             }
 

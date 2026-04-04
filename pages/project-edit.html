@@ -9,7 +9,7 @@
 <body>
     <div class="app-container">
         <div class="page-header">
-            <a href="project-list.html" class="back-btn">←</a>
+            <a href="project-list.html" class="back-btn">�?/a>
             <h2 class="page-title" id="page-title">新建项目</h2>
         </div>
 
@@ -17,19 +17,19 @@
             <form id="project-form" class="card">
                 <div class="form-group">
                     <label class="form-label">项目名称 *</label>
-                    <input type="text" class="form-input" id="name" placeholder="例：XX小区改造项目" required>
+                    <input type="text" class="form-input" id="name" placeholder="例：XX小区改造项�? required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">合同金额（元）*</label>
-                    <input type="number" class="form-input" id="contractAmount" placeholder="输入合同总金额" required>
+                    <label class="form-label">合同金额（元�?</label>
+                    <input type="number" class="form-input" id="contractAmount" placeholder="输入合同总金�? required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">甲方/客户</label>
                     <input type="text" class="form-input" id="client" placeholder="甲方公司名称">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">甲方联系人</label>
-                    <input type="text" class="form-input" id="clientContact" placeholder="甲方联系人姓名">
+                    <label class="form-label">甲方联系�?/label>
+                    <input type="text" class="form-input" id="clientContact" placeholder="甲方联系人姓�?>
                 </div>
                 <div class="form-group">
                     <label class="form-label">甲方联系电话</label>
@@ -40,15 +40,15 @@
                     <textarea class="form-input" id="clientAddress" placeholder="用于快递合同、发票等文档" rows="2" style="resize:none;"></textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">负责人</label>
-                    <input type="text" class="form-input" id="manager" placeholder="项目负责人">
+                    <label class="form-label">负责�?/label>
+                    <input type="text" class="form-input" id="manager" placeholder="项目负责�?>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">负责人电话</label>
-                    <input type="tel" class="form-input" id="managerPhone" placeholder="负责人联系电话">
+                    <label class="form-label">负责人电�?/label>
+                    <input type="tel" class="form-input" id="managerPhone" placeholder="负责人联系电�?>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">开工日期</label>
+                    <label class="form-label">开工日�?/label>
                     <input type="date" class="form-input" id="startDate">
                 </div>
                 <div class="form-group">
@@ -56,16 +56,16 @@
                     <input type="date" class="form-input" id="endDate">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">项目状态</label>
+                    <label class="form-label">项目状�?/label>
                     <select class="form-select" id="status">
-                        <option value="进行中">进行中</option>
-                        <option value="已完成">已完成</option>
-                        <option value="已暂停">已暂停</option>
-                        <option value="已取消">已取消</option>
+                        <option value="进行�?>进行�?/option>
+                        <option value="已完�?>已完�?/option>
+                        <option value="已暂�?>已暂�?/option>
+                        <option value="已取�?>已取�?/option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">进度（%）</label>
+                    <label class="form-label">进度�?�?/label>
                     <input type="range" id="progress" min="0" max="100" value="0" style="width:100%;">
                     <div style="text-align:center;color:#666;font-size:14px;" id="progress-value">0%</div>
                 </div>
@@ -73,7 +73,7 @@
                     <label class="form-label">发票类型</label>
                     <select class="form-select" id="invoiceType">
                         <option value="专用发票">增值税专用发票</option>
-                        <option value="普通发票">增值税普通发票</option>
+                        <option value="普通发�?>增值税普通发�?/option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -83,7 +83,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">预计税费（元）</label>
+                    <label class="form-label">预计税费（元�?/label>
                     <input type="number" class="form-input" id="taxAmount" placeholder="根据税率自动计算" readonly style="background:#f5f5f5;">
                 </div>
                 <div class="form-group">
@@ -119,7 +119,7 @@
                 .then(function(r) { return r.json(); })
                 .then(function(data) {
                     data = data || [];
-                    var rates = data.filter(function(t) { return t.type === 'tax_rate'; });
+                    var rates = data.filter(function(t) { return t.type === 'taxrate'; });
                     document.getElementById('taxRate').innerHTML = '<option value="">选择税率</option>' + 
                         rates.map(function(t) { return '<option value="' + t.rate + '">' + (parseFloat(t.rate) * 100) + '%</option>'; }).join('');
                     
@@ -163,7 +163,7 @@
                 document.getElementById('managerPhone').value = project.managerPhone || '';
                 document.getElementById('startDate').value = project.startDate || '';
                 document.getElementById('endDate').value = project.endDate || '';
-                document.getElementById('status').value = project.status || '进行中';
+                document.getElementById('status').value = project.status || '进行�?;
                 document.getElementById('progress').value = project.progress || 0;
                 document.getElementById('progress-value').textContent = (project.progress || 0) + '%';
                 document.getElementById('invoiceType').value = project.invoiceType || '';
@@ -195,8 +195,8 @@
                 remark: document.getElementById('remark').value.trim()
             };
 
-            if (!data.name) { Utils.showToast('请输入项目名称'); return; }
-            if (!data.contractAmount) { Utils.showToast('请输入合同金额'); return; }
+            if (!data.name) { Utils.showToast('请输入项目名�?); return; }
+            if (!data.contractAmount) { Utils.showToast('请输入合同金�?); return; }
 
             if (isEdit) {
                 ProjectStore.update(projectId, data);
@@ -204,13 +204,13 @@
                     method: 'PATCH',
                     headers: hdrs,
                     body: JSON.stringify({
-                        name: data.name, contract_amount: data.contractAmount, client: data.client, 
-                        client_contact: data.clientContact, client_phone: data.clientPhone, 
-                        client_address: data.clientAddress, manager: data.manager, 
-                        manager_phone: data.managerPhone, start_date: data.startDate, 
-                        end_date: data.endDate, status: data.status, progress: data.progress, 
-                        invoice_type: data.invoiceType, tax_rate: data.taxRate, tax_amount: data.taxAmount, 
-                        remark: data.remark, updated_at: new Date().toISOString()
+                        name: data.name, contractamount: data.contractAmount, client: data.client, 
+                        clientcontact: data.clientContact, clientphone: data.clientPhone, 
+                        clientaddress: data.clientAddress, manager: data.manager, 
+                        managerphone: data.managerPhone, startdate: data.startDate, 
+                        enddate: data.endDate, status: data.status, progress: data.progress, 
+                        invoicetype: data.invoiceType, taxrate: data.taxRate, taxamount: data.taxAmount, 
+                        remark: data.remark, updatedat: new Date().toISOString()
                     })
                 }).catch(function(e) {});
                 Utils.showToast('保存成功');
@@ -220,13 +220,13 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Prefer': 'return=representation' },
                     body: JSON.stringify({
-                        id: project.id, name: project.name, contract_amount: project.contractAmount,
-                        client: project.client||'', client_contact: project.clientContact||'',
-                        client_phone: project.clientPhone||'', client_address: project.clientAddress||'',
-                        manager: project.manager||'', manager_phone: project.managerPhone||'',
-                        start_date: project.startDate||null, end_date: project.endDate||null,
-                        status: project.status||'进行中', progress: project.progress||0,
-                        invoice_type: project.invoiceType||'', tax_rate: project.taxRate||0, tax_amount: project.taxAmount||0,
+                        id: project.id, name: project.name, contractamount: project.contractAmount,
+                        client: project.client||'', clientcontact: project.clientContact||'',
+                        clientphone: project.clientPhone||'', clientaddress: project.clientAddress||'',
+                        manager: project.manager||'', managerphone: project.managerPhone||'',
+                        startdate: project.startDate||null, enddate: project.endDate||null,
+                        status: project.status||'进行�?, progress: project.progress||0,
+                        invoicetype: project.invoiceType||'', taxrate: project.taxRate||0, taxamount: project.taxAmount||0,
                         remark: project.remark||'',
                         companyid: currentUser.companyId
                     })
@@ -239,9 +239,9 @@
         });
 
         document.getElementById('delete-btn').addEventListener('click', function() {
-            if (confirm('确定要删除这个项目吗？')) {
+            if (confirm('确定要删除这个项目吗�?)) {
                 ProjectStore.delete(projectId);
-                Utils.showToast('已删除');
+                Utils.showToast('已删�?);
                 setTimeout(function() { location.href = 'project-list.html'; }, 500);
             }
         });

@@ -256,6 +256,7 @@
                             }
                             return r.text().then(function(t) { throw new Error('创建公司失败: ' + t); });
                         });
+                    })
                     .then(function(newCompany) {
                         if (!newCompany || newCompany.length === 0) throw new Error('创建公司失败');
                         // 创建用户（待审批）

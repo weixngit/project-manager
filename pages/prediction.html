@@ -10,7 +10,7 @@
     <div class="app-container">
         <!-- 页面头部 -->
         <div class="page-header">
-            <a href="../index.html" class="back-btn">←</a>
+            <a href="../index.html" class="back-btn">�?/a>
             <h2 class="page-title">项目预测</h2>
         </div>
 
@@ -23,22 +23,22 @@
                 </p>
 
                 <div class="form-group">
-                    <label class="form-label">合同金额（元）*</label>
-                    <input type="number" class="form-input" id="contractAmount" placeholder="输入合同总金额" required>
+                    <label class="form-label">合同金额（元�?</label>
+                    <input type="number" class="form-input" id="contractAmount" placeholder="输入合同总金�? required>
                 </div>
 
                 <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
                     <h4 style="font-size: 14px; margin-bottom: 12px;">预计成本</h4>
                     <div class="form-group" style="margin-bottom: 12px;">
-                        <label class="form-label">👷 人工分包款</label>
+                        <label class="form-label">👷 人工分包�?/label>
                         <input type="number" class="form-input" id="estimatedLabor" placeholder="0">
                     </div>
                     <div class="form-group" style="margin-bottom: 12px;">
-                        <label class="form-label">📦 设备材料费</label>
+                        <label class="form-label">📦 设备材料�?/label>
                         <input type="number" class="form-input" id="estimatedMaterial" placeholder="0">
                     </div>
                     <div class="form-group" style="margin-bottom: 12px;">
-                        <label class="form-label">🤝 商务费</label>
+                        <label class="form-label">🤝 商务�?/label>
                         <input type="number" class="form-input" id="estimatedBusiness" placeholder="0">
                     </div>
                     <div class="form-group" style="margin-bottom: 12px;">
@@ -77,8 +77,7 @@
     <script src="../js/storage.js"></script>
     <script src="../js/utils.js"></script>
     <script>
-        // 检查登录
-        var userStr = localStorage.getItem('pm_user');
+        // 检查登�?        var userStr = localStorage.getItem('pm_user');
         if (!userStr) { window.location.href = 'login.html'; }
         
         // 表单提交
@@ -129,7 +128,7 @@
             area.style.display = 'block';
 
             const profitClass = result.estimatedProfit >= 0 ? 'profit-positive' : 'profit-negative';
-            const statusText = result.isViable ? '✅ 项目可行' : '⚠️ 需要谨慎';
+            const statusText = result.isViable ? '�?项目可行' : '⚠️ 需要谨�?;
             const statusBg = result.isViable ? '#f6ffed' : '#fff7e6';
 
             area.innerHTML = `
@@ -142,7 +141,7 @@
                             ${Utils.formatMoney(result.estimatedProfit)}
                         </div>
                         <div style="font-size: 16px; color: #666; margin-top: 8px;">
-                            利润率 <strong style="font-size: 20px;">${result.profitRate}%</strong>
+                            利润�?<strong style="font-size: 20px;">${result.profitRate}%</strong>
                         </div>
                     </div>
 
@@ -157,7 +156,7 @@
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         ${renderCostBar('人工分包', data.estimatedLabor, result.totalEstimatedCost)}
                         ${renderCostBar('设备材料', data.estimatedMaterial, result.totalEstimatedCost)}
-                        ${renderCostBar('商务费', data.estimatedBusiness, result.totalEstimatedCost)}
+                        ${renderCostBar('商务�?, data.estimatedBusiness, result.totalEstimatedCost)}
                         ${renderCostBar('机械租赁', data.estimatedMachinery, result.totalEstimatedCost)}
                         ${renderCostBar('交通费', data.estimatedTransport, result.totalEstimatedCost)}
                         ${renderCostBar('杂费', data.estimatedOther, result.totalEstimatedCost)}
@@ -185,7 +184,7 @@
 
                 <!-- 建议操作 -->
                 <div style="margin-top: 16px; display: flex; gap: 12px;">
-                    <button class="btn btn-block" style="background: #f5f5f5; color: #666;" onclick="saveAsProject()">保存为项目</button>
+                    <button class="btn btn-block" style="background: #f5f5f5; color: #666;" onclick="saveAsProject()">保存为项�?/button>
                     <button class="btn btn-primary btn-block" onclick="resetForm()">重新计算</button>
                 </div>
             `;
@@ -217,7 +216,7 @@
             };
 
             const project = ProjectStore.add(data);
-            Utils.showToast('项目已创建');
+            Utils.showToast('项目已创�?);
             
             setTimeout(() => {
                 location.href = `project-detail.html?id=${project.id}`;

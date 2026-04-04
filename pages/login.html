@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ç»å½ - å·¥ç¨é¡¹ç®ç®¡ç</title>
+    <title>登录 - 工程项目管理</title>
     <link rel="stylesheet" href="../css/style.css">
     <style>
         .login-container { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
@@ -26,46 +26,46 @@
     <div class="login-container">
         <div class="login-box">
             <div class="login-title">
-                <h1>å·¥ç¨é¡¹ç®ç®¡ç</h1>
-                <p id="mode-text">è¯·ç»å½æ¨çè´¦ï¿?/p>
+                <h1>工程项目管理</h1>
+                <p id="mode-text">请登录您的账号</p>
             </div>
             
             <form id="login-form">
                 <div class="form-group company-field" id="company-group">
-                    <label>å¬å¸åç§°</label>
-                    <input type="text" id="company" placeholder="è¯·è¾å¥å¬å¸åï¿? maxlength="50">
-                    <div class="error-msg" id="company-error">è¯·è¾å¥å¬å¸åï¿?/div>
+                    <label>公司名称</label>
+                    <input type="text" id="company" placeholder="请输入公司名称" maxlength="50">
+                    <div class="error-msg" id="company-error">请输入公司名称</div>
                 </div>
                 
                 <div class="form-group">
-                    <label>ç¨æ·ï¿?/label>
-                    <input type="text" id="username" placeholder="è¯·è¾å¥ç¨æ·å" maxlength="20" autocomplete="username">
+                    <label>用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名" maxlength="20" autocomplete="username">
                 </div>
                 
                 <div class="form-group">
-                    <label>å¯ç </label>
-                    <input type="password" id="password" placeholder="è¯·è¾å¥å¯ï¿? maxlength="20" autocomplete="current-password">
+                    <label>密码</label>
+                    <input type="password" id="password" placeholder="请输入密码" maxlength="20" autocomplete="current-password">
                 </div>
                 
                 <div class="form-group" id="password-confirm-group" style="display:none;">
-                    <label>ç¡®è®¤å¯ç </label>
-                    <input type="password" id="password-confirm" placeholder="è¯·åæ¬¡è¾å¥å¯ï¿? maxlength="20">
+                    <label>确认密码</label>
+                    <input type="password" id="password-confirm" placeholder="请再次输入密码" maxlength="20">
                 </div>
                 
                 <div class="form-group" id="role-group">
-                    <label>ç»å½èº«ä»½</label>
+                    <label>登录身份</label>
                     <select id="login-role" style="width:100%;padding:12px 16px;border:1px solid #ddd;border-radius:8px;font-size:15px;box-sizing:border-box;">
-                        <option value="user">æ®éç¨ï¿?/option>
-                        <option value="admin">ç®¡çï¿?/option>
+                        <option value="user">普通用户</option>
+                        <option value="admin">管理员</option>
                     </select>
                 </div>
                 
-                <div class="error-msg" id="login-error">ç¨æ·åæå¯ç éè¯¯</div>
+                <div class="error-msg" id="login-error">用户名或密码错误</div>
                 
-                <button type="submit" class="btn-login" id="submit-btn">ç»å½</button>
+                <button type="submit" class="btn-login" id="submit-btn">登录</button>
             </form>
             
-            <div class="switch-mode" id="switch-btn" style="text-align:center;margin-top:20px;color:#667eea;font-size:14px;cursor:pointer;">è¿æ²¡æè´¦å·ï¼ç«å³æ³¨å</div>
+            <div class="switch-mode" id="switch-btn" style="text-align:center;margin-top:20px;color:#667eea;font-size:14px;cursor:pointer;">还没有账号？立即注册</div>
         </div>
     </div>
 
@@ -73,10 +73,6 @@
         var CLOUD_URL = 'https://azspvriaxhlllgtphwgv.supabase.co';
         var CLOUD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6c3B2cmlheGhsbGxndHBod2d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NTM1OTMsImV4cCI6MjA5MDQyOTU5M30.6F3W6dYQ8DdtWRFBGBIejcms2XCvdMxWBvmOX_AMlAc';
         var hdrs = { 'apikey': CLOUD_KEY, 'Authorization': 'Bearer ' + CLOUD_KEY, 'Content-Type': 'application/json' };
-        
-        // æ£æ¥æ¯å¦å·²ç»å½
-        var user = localStorage.getItem('pm_user');
-        if (user) { window.location.href = '../index.html'; }
         
         var isLoginMode = true;
         var switchBtn = document.getElementById('switch-btn');
@@ -90,19 +86,23 @@
         switchBtn.addEventListener('click', function() {
             isLoginMode = !isLoginMode;
             if (isLoginMode) {
-                modeText.textContent = 'è¯·ç»å½æ¨çè´¦ï¿?;
-                submitBtn.textContent = 'ç»å½';
-                switchBtn.textContent = 'è¿æ²¡æè´¦å·ï¼ç«å³æ³¨å';
+                modeText.textContent = '请登录您的账号';
+                submitBtn.textContent = '登录';
+                switchBtn.textContent = '还没有账号？立即注册';
                 companyGroup.classList.remove('show');
                 roleGroup.style.display = '';
                 pwdConfirmGroup.style.display = 'none';
             } else {
-                modeText.textContent = 'æ³¨åæ°è´¦ï¿?;
-                submitBtn.textContent = 'æ³¨å';
-                switchBtn.textContent = 'å·²æè´¦å·ï¼ç«å³ç»ï¿?;
+                modeText.textContent = '注册新账号';
+                submitBtn.textContent = '注册';
+                switchBtn.textContent = '已有账号？立即登录';
                 companyGroup.classList.add('show');
                 roleGroup.style.display = 'none';
                 pwdConfirmGroup.style.display = '';
+                document.getElementById('company').value = '';
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('password-confirm').value = '';
             }
             loginError.style.display = 'none';
         });
@@ -117,144 +117,128 @@
             return 'pm_' + Math.abs(hash).toString(16);
         }
         
-        // ç»å½
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             loginError.style.display = 'none';
+            submitBtn.textContent = '提交中...';
+            submitBtn.disabled = true;
             
-            var company = document.getElementById('company').value.trim();
             var username = document.getElementById('username').value.trim();
             var password = document.getElementById('password').value;
-            
-            if (!username || !password) {
-                loginError.textContent = 'è¯·è¾å¥ç¨æ·ååå¯ï¿?;
-                loginError.style.display = 'block';
-                return;
-            }
+            var role = document.getElementById('login-role').value;
+            var company = document.getElementById('company').value.trim();
             
             if (isLoginMode) {
-                // ç»å½ - ç´æ¥æ¥è¯¢æ°æ®ï¿?                submitBtn.textContent = 'ç»å½ï¿?..';
-                submitBtn.disabled = true;
+                // 登录逻辑
+                if (!username || !password) {
+                    loginError.textContent = '请输入用户名和密码';
+                    loginError.style.display = 'block';
+                    submitBtn.textContent = '登录';
+                    submitBtn.disabled = false;
+                    return;
+                }
                 
                 var pwdHash = hashPassword(password);
-                var selectedRole = document.getElementById('login-role').value;
                 
                 fetch(CLOUD_URL + '/rest/v1/users?username=eq.' + encodeURIComponent(username) + '&select=*', { headers: hdrs })
-                    .then(function(r) { 
-                        if (!r.ok) throw new Error('è¯·æ±å¤±è´¥');
-                        return r.json(); 
-                    })
+                    .then(function(r) { return r.json(); })
                     .then(function(users) {
-                        console.log('æ¥è¯¢ç»æ:', users);
-                        if (users && users.length > 0) {
-                            var u = users[0];
-                            console.log('ç¨æ·æ°æ®:', u);
-                            console.log('è¾å¥å¯ç åå¸:', pwdHash);
-                            console.log('æ°æ®åºå¯ç åï¿?', u.passwordhash);
-                            
-                            if (u.passwordhash === pwdHash) {
-                                // æ£æ¥è§è²æ¯å¦å¹ï¿?                                if (u.role !== selectedRole) {
-                                    throw new Error('è¯¥ç¨æ·ä¸ï¿? + (selectedRole === 'admin' ? 'ç®¡çï¿? : 'æ®éç¨ï¿?));
-                                }
-                                // æ£æ¥æ¯å¦å·²å®¡æ¹
-                                if (u.approved === false) {
-                                    throw new Error('è´¦å·å¾å®¡æ ¸ï¼è¯·èç³»ç®¡çå');
-                                }
-                                // è·åå¬å¸ä¿¡æ¯
-                                return fetch(CLOUD_URL + '/rest/v1/companies?id=eq.' + u.companyid, { headers: hdrs })
-                                    .then(function(r) { return r.json(); })
-                                    .then(function(companies) {
-                                        var userData = {
-                                            id: u.id,
-                                            username: u.username,
-                                            role: u.role,
-                                            companyId: u.companyid,
-                                            companyName: (companies && companies.length > 0) ? companies[0].name : ''
-                                        };
-                                        localStorage.setItem('pm_user', JSON.stringify(userData));
-                                        if (u.role === 'admin') {
-                                            window.location.href = 'admin.html';
-                                        } else {
-                                            window.location.href = '../index.html';
-                                        }
-                                    });
-                            } else {
-                                throw new Error('å¯ç éè¯¯');
-                            }
+                        if (!users || users.length === 0) {
+                            throw new Error('用户名或密码错误');
+                        }
+                        var user = users[0];
+                        if (user.passwordhash !== pwdHash) {
+                            throw new Error('用户名或密码错误');
+                        }
+                        if (!user.approved) {
+                            throw new Error('账号尚未通过审核');
+                        }
+                        if (role === 'admin' && user.role !== 'admin') {
+                            throw new Error('您不是管理员');
+                        }
+                        
+                        localStorage.setItem('pm_user', JSON.stringify({
+                            id: user.id,
+                            username: user.username,
+                            role: user.role,
+                            companyId: user.companyid
+                        }));
+                        
+                        if (user.role === 'admin') {
+                            window.location.href = 'pages/admin.html';
                         } else {
-                            throw new Error('ç¨æ·ä¸å­ï¿?);
+                            window.location.href = '../index.html';
                         }
                     })
                     .catch(function(err) {
-                        console.error('ç»å½å¤±è´¥:', err);
-                        loginError.textContent = 'ç»å½å¤±è´¥: ' + err.message;
+                        loginError.textContent = err.message;
                         loginError.style.display = 'block';
-                        submitBtn.textContent = 'ç»å½';
+                        submitBtn.textContent = '登录';
                         submitBtn.disabled = false;
                     });
             } else {
-                // æ³¨å
-                submitBtn.textContent = 'æ³¨åï¿?..';
-                submitBtn.disabled = true;
-                
+                // 注册逻辑
                 if (!company) {
-                    loginError.textContent = 'è¯·è¾å¥å¬å¸åï¿?;
+                    loginError.textContent = '请输入公司名称';
                     loginError.style.display = 'block';
-                    submitBtn.textContent = 'æ³¨å';
+                    submitBtn.textContent = '注册';
                     submitBtn.disabled = false;
                     return;
                 }
                 
                 var minLen = /^[\u4e00-\u9fa5]/.test(username) ? 2 : 3;
                 if (!username || username.length < minLen) {
-                    loginError.textContent = 'ç¨æ·åè³ï¿? + minLen + 'ä¸ªå­ï¿?;
+                    loginError.textContent = '用户名至少' + minLen + '个字符';
                     loginError.style.display = 'block';
-                    submitBtn.textContent = 'æ³¨å';
+                    submitBtn.textContent = '注册';
                     submitBtn.disabled = false;
                     return;
                 }
                 
                 if (!password || password.length < 6) {
-                    loginError.textContent = 'å¯ç è³å°6ä¸ªå­ï¿?;
+                    loginError.textContent = '密码至少6个字符';
                     loginError.style.display = 'block';
-                    submitBtn.textContent = 'æ³¨å';
+                    submitBtn.textContent = '注册';
                     submitBtn.disabled = false;
                     return;
                 }
                 
                 var pwdConfirm = document.getElementById('password-confirm').value;
                 if (password !== pwdConfirm) {
-                    loginError.textContent = 'ä¸¤æ¬¡å¯ç è¾å¥ä¸ä¸ï¿?;
+                    loginError.textContent = '两次密码输入不一致';
                     loginError.style.display = 'block';
-                    submitBtn.textContent = 'æ³¨å';
+                    submitBtn.textContent = '注册';
                     submitBtn.disabled = false;
                     return;
                 }
                 
                 var pwdHash = hashPassword(password);
                 
-                // æ£æ¥ç¨æ·åæ¯å¦å·²å­ï¿?                fetch(CLOUD_URL + '/rest/v1/users?username=eq.' + encodeURIComponent(username) + '&select=id', { headers: hdrs })
+                // 检查用户名是否已存在
+                fetch(CLOUD_URL + '/rest/v1/users?username=eq.' + encodeURIComponent(username) + '&select=id', { headers: hdrs })
                     .then(function(r) { return r.json(); })
                     .then(function(existing) {
                         if (existing && existing.length > 0) {
-                            throw new Error('ç¨æ·åå·²è¢«ä½¿ï¿?);
+                            throw new Error('用户名已被使用');
                         }
-                        // åå»ºå¬å¸ï¼å¦æå·²å­å¨åä½¿ç¨å·²æçï¿?                        var companyId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8); return v.toString(16); });
+                        // 创建公司
+                        var companyId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8); return v.toString(16); });
                         return fetch(CLOUD_URL + '/rest/v1/companies', {
                             method: 'POST',
                             headers: hdrs,
                             body: JSON.stringify({ id: companyId, name: company, createdat: new Date().toISOString() })
                         }).then(function(r) {
                             if (r.ok) return r.json();
-                            // 409=å¬å¸å·²å­å¨ï¼æ¥è¯¢å·²æï¿?                            if (r.status === 409) {
+                            if (r.status === 409) {
                                 return fetch(CLOUD_URL + '/rest/v1/companies?name=eq.' + encodeURIComponent(company) + '&select=id', { headers: hdrs }).then(function(r2) { return r2.json(); });
                             }
-                            return r.text().then(function(t) { throw new Error('åå»ºå¬å¸å¤±è´¥: ' + t); });
+                            return r.text().then(function(t) { throw new Error('创建公司失败: ' + t); });
                         });
                     })
                     .then(function(newCompany) {
-                        if (!newCompany || newCompany.length === 0) throw new Error('åå»ºå¬å¸å¤±è´¥');
-                        // åå»ºç¨æ·ï¼å¾å®¡æ¹ï¿?                        var userId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8); return v.toString(16); });
+                        if (!newCompany || newCompany.length === 0) throw new Error('创建公司失败');
+                        // 创建用户
+                        var userId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random()*16|0, v = c==='x'?r:(r&0x3|0x8); return v.toString(16); });
                         return fetch(CLOUD_URL + '/rest/v1/users', {
                             method: 'POST',
                             headers: hdrs,
@@ -269,24 +253,23 @@
                         });
                     })
                     .then(function(r) {
-                        if (!r.ok) throw new Error('åå»ºç¨æ·å¤±è´¥');
+                        if (!r.ok) throw new Error('创建用户失败');
                         return r.json();
                     })
                     .then(function() {
-                        alert('æ³¨åæåï¼è¯·ç­å¾ç®¡çåå®¡æ ¸åç»å½');
-                        // æ¸ç©ºæ³¨åè¡¨å
-                        document.getElementById('company-name').value = '';
+                        alert('注册成功，请等待管理员审核后登录');
+                        document.getElementById('company').value = '';
                         document.getElementById('username').value = '';
                         document.getElementById('password').value = '';
                         document.getElementById('password-confirm').value = '';
                         switchBtn.click();
-                        submitBtn.textContent = 'ç»å½';
+                        submitBtn.textContent = '登录';
                         submitBtn.disabled = false;
                     })
                     .catch(function(err) {
                         loginError.textContent = err.message;
                         loginError.style.display = 'block';
-                        submitBtn.textContent = 'æ³¨å';
+                        submitBtn.textContent = '注册';
                         submitBtn.disabled = false;
                     });
             }
@@ -294,7 +277,3 @@
     </script>
 </body>
 </html>
-
-
-
-
